@@ -160,13 +160,7 @@ export const getCustomerLoanRequests = async (customerId: string) => {
     // Get loan requests
     const { data: loanRequests, error: loanRequestsError } = await supabase
       .from('loan_requests')
-      .select(`
-        *,
-        loans:loan_id (
-          amount,
-          duration
-        )
-      `)
+      .select('*')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
     
@@ -187,35 +181,82 @@ export const getCustomerLoanRequests = async (customerId: string) => {
       console.error('Error fetching references:', referencesError);
       return { success: false, error: referencesError };
     }
+
+    
     
     // Format data for the list view
-    const formattedRequests: LoanRequestListItem[] = loanRequests.map(lr => {
-      // Find the first reference to display
-      const firstReference = references.find(
-        ref => ref.loan_request_id === lr.id && ref.reference_order === 1
-      );
+    // const formattedRequests: LoanRequestListItem[] = loanRequests.map(async lr => {
+    //   // Find the first reference to display
+    //   const firstReference = references.find(
+    //     ref => ref.loan_request_id == lr.id && ref.reference_order == 1
+    //   );
+
       
-      // Map pay frequency to display text
-      const payFrequencyMap = {
-        '1month': 'Once a month',
-        '2weeks': 'Every 2 weeks',
-        'bimonthly': 'Twice a month',
-        '1week': 'Every week'
-      };
+
+    //   // const firstReference  = references.find((ref)=>{
+    //   //   console.log(`Loan Request Id ${ref.loan_request_id}`)
+    //   //   console.log(`LR ${lr.id}`)
+    //   //   console.log(`Order is ${ref.reference_order}`)
+    //   // })
       
-      return {
-        id: lr.id,
-        requestDate: lr.request_date,
-        loanPackage: {
-          amount: lr.loans.amount,
-          duration: lr.loans.duration
-        },
-        payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
-        reference: firstReference ? firstReference.name : 'N/A',
-        status: lr.status,
-        nextPayDate: lr.next_pay_date
-      };
-    });
+    //   // Map pay frequency to display text
+    //   const payFrequencyMap = {
+    //     '1month': 'Once a month',
+    //     '2weeks': 'Every 2 weeks',
+    //     'bimonthly': 'Twice a month',
+    //     '1week': 'Every week'
+    //   };
+
+
+    //   let loanDetails = await getLoanById(lr?.loan_id)
+
+    //   return {
+    //     id: lr.id,
+    //     requestDate: lr.request_date,
+    //     loanPackage: {
+    //       amount: loanDetails?.data?.amount,
+    //       duration: loanDetails?.data?.duration
+    //     },
+    //     payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+    //     reference: firstReference ? firstReference.name : 'N/A',
+    //     status: lr.status,
+    //     nextPayDate: lr.next_pay_date
+    //   };
+    // });
+    const formattedRequests: LoanRequestListItem[] = await Promise.all(
+      loanRequests.map(async (lr: any) => {
+        // Find the first reference to display
+        const firstReference = references.find(
+          (ref) => ref.loan_request_id == lr.id && ref.reference_order == 1
+        );
+    
+        // Map pay frequency to display text
+        const payFrequencyMap = {
+          "1month": "Once a month",
+          "2weeks": "Every 2 weeks",
+          "bimonthly": "Twice a month",
+          "1week": "Every week",
+        };
+    
+        let loanDetails = await getLoanById(lr?.loan_id);
+    
+        return {
+          id: lr.id,
+          requestDate: lr.request_date,
+          loanPackage: {
+            amount: loanDetails?.data?.amount,
+            duration: loanDetails?.data?.duration,
+          },
+          payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+          reference: firstReference ? firstReference.name : "N/A",
+          status: lr.status,
+          nextPayDate: lr.next_pay_date,
+          admin_request_status: lr.admin_request_status
+        };
+      })
+    );
+    
+    
     
     return { success: true, data: formattedRequests };
   } catch (error) {
@@ -223,6 +264,254 @@ export const getCustomerLoanRequests = async (customerId: string) => {
     return { success: false, error };
   }
 };
+
+export const getAllLoanRequests = async (admin_request_status) => {
+  try {
+    // Get loan requests
+    const { data: loanRequests, error: loanRequestsError } = admin_request_status ? await supabase
+    .from('loan_requests')
+    .select('*')
+    .eq('admin_request_status' , admin_request_status)
+    .order('created_at', { ascending: false }) : await supabase
+    .from('loan_requests')
+    .select('*')
+    .order('created_at', { ascending: false });
+    
+    if (loanRequestsError) {
+      console.error('Error fetching loan requests:', loanRequestsError);
+      return { success: false, error: loanRequestsError };
+    }
+
+    
+    // Get references for all loan requests
+    const loanRequestIds = loanRequests.map(lr => lr.id);
+    
+    const { data: references, error: referencesError } = await supabase
+      .from('references')
+      .select('*')
+      .in('loan_request_id', loanRequestIds);
+    
+    if (referencesError) {
+      console.error('Error fetching references:', referencesError);
+      return { success: false, error: referencesError };
+    }
+
+    
+    
+    // Format data for the list view
+    // const formattedRequests: LoanRequestListItem[] = loanRequests.map(async lr => {
+    //   // Find the first reference to display
+    //   const firstReference = references.find(
+    //     ref => ref.loan_request_id == lr.id && ref.reference_order == 1
+    //   );
+
+      
+
+    //   // const firstReference  = references.find((ref)=>{
+    //   //   console.log(`Loan Request Id ${ref.loan_request_id}`)
+    //   //   console.log(`LR ${lr.id}`)
+    //   //   console.log(`Order is ${ref.reference_order}`)
+    //   // })
+      
+    //   // Map pay frequency to display text
+    //   const payFrequencyMap = {
+    //     '1month': 'Once a month',
+    //     '2weeks': 'Every 2 weeks',
+    //     'bimonthly': 'Twice a month',
+    //     '1week': 'Every week'
+    //   };
+
+
+    //   let loanDetails = await getLoanById(lr?.loan_id)
+
+    //   return {
+    //     id: lr.id,
+    //     requestDate: lr.request_date,
+    //     loanPackage: {
+    //       amount: loanDetails?.data?.amount,
+    //       duration: loanDetails?.data?.duration
+    //     },
+    //     payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+    //     reference: firstReference ? firstReference.name : 'N/A',
+    //     status: lr.status,
+    //     nextPayDate: lr.next_pay_date
+    //   };
+    // });
+    const formattedRequests: LoanRequestListItem[] = await Promise.all(
+      loanRequests.map(async (lr) => {
+        // Find the first reference to display
+        // const firstReference = references.find(
+        //   (ref) => ref.loan_request_id == lr.id && ref.reference_order == 1
+        // );
+    
+        // Map pay frequency to display text
+        
+        let loanDetails = await getLoanById(lr?.loan_id);
+
+        let customerDetails = await allCustomers(lr?.customer_id)
+
+        const payFrequencyMap = {
+          "1month": "Once a month",
+          "2weeks": "Every 2 weeks",
+          "bimonthly": "Twice a month",
+          "1week": "Every week",
+        };
+    
+    
+        return {
+          id: lr.id,
+          customerData: customerDetails?.data,
+          loanDetails: lr ,
+          loanPackage: {
+            amount: loanDetails?.data?.amount,
+            duration: loanDetails?.data?.duration,
+          },
+          payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+
+          // requestDate: lr.request_date,
+          // loanPackage: {
+          //   amount: loanDetails?.data?.amount,
+          //   duration: loanDetails?.data?.duration,
+          // },
+          // reference: firstReference ? firstReference.name : "N/A",
+          // status: lr.status,
+          // nextPayDate: lr.next_pay_date,
+        };
+      })
+    );
+    
+    
+    
+    return { success: true, data: formattedRequests };
+  } catch (error) {
+    console.error('Unexpected error fetching customer loan requests:', error);
+    return { success: false, error };
+  }
+};
+
+
+
+export const getAllPerceptions  = async () => {
+  try {
+    // Get loan requests
+    const { data: loanRequests, error: loanRequestsError } = await supabase
+    .from('perceptions')
+    .select('*')
+    .order('created_at', { ascending: false });
+    
+    if (loanRequestsError) {
+      console.error('Error fetching loan requests:', loanRequestsError);
+      return { success: false, error: loanRequestsError };
+    }
+
+    
+    // Get references for all loan requests
+    const loanRequestIds = loanRequests.map(lr => lr.id);
+    
+    const { data: references, error: referencesError } = await supabase
+      .from('references')
+      .select('*')
+      .in('loan_request_id', loanRequestIds);
+    
+    if (referencesError) {
+      console.error('Error fetching references:', referencesError);
+      return { success: false, error: referencesError };
+    }
+
+    
+    
+    // Format data for the list view
+    // const formattedRequests: LoanRequestListItem[] = loanRequests.map(async lr => {
+    //   // Find the first reference to display
+    //   const firstReference = references.find(
+    //     ref => ref.loan_request_id == lr.id && ref.reference_order == 1
+    //   );
+
+      
+
+    //   // const firstReference  = references.find((ref)=>{
+    //   //   console.log(`Loan Request Id ${ref.loan_request_id}`)
+    //   //   console.log(`LR ${lr.id}`)
+    //   //   console.log(`Order is ${ref.reference_order}`)
+    //   // })
+      
+    //   // Map pay frequency to display text
+    //   const payFrequencyMap = {
+    //     '1month': 'Once a month',
+    //     '2weeks': 'Every 2 weeks',
+    //     'bimonthly': 'Twice a month',
+    //     '1week': 'Every week'
+    //   };
+
+
+    //   let loanDetails = await getLoanById(lr?.loan_id)
+
+    //   return {
+    //     id: lr.id,
+    //     requestDate: lr.request_date,
+    //     loanPackage: {
+    //       amount: loanDetails?.data?.amount,
+    //       duration: loanDetails?.data?.duration
+    //     },
+    //     payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+    //     reference: firstReference ? firstReference.name : 'N/A',
+    //     status: lr.status,
+    //     nextPayDate: lr.next_pay_date
+    //   };
+    // });
+    const formattedRequests: LoanRequestListItem[] = await Promise.all(
+      loanRequests.map(async (lr) => {
+        // Find the first reference to display
+        // const firstReference = references.find(
+        //   (ref) => ref.loan_request_id == lr.id && ref.reference_order == 1
+        // );
+    
+        // Map pay frequency to display text
+        
+        let loanDetails = await getLoanById(lr?.loan_id);
+
+        let customerDetails = await allCustomers(lr?.customer_id)
+
+        const payFrequencyMap = {
+          "1month": "Once a month",
+          "2weeks": "Every 2 weeks",
+          "bimonthly": "Twice a month",
+          "1week": "Every week",
+        };
+    
+    
+        return {
+          id: lr.id,
+          customerData: customerDetails?.data,
+          loanDetails: lr ,
+          loanPackage: {
+            amount: loanDetails?.data?.amount,
+            duration: loanDetails?.data?.duration,
+          },
+          payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+
+          // requestDate: lr.request_date,
+          // loanPackage: {
+          //   amount: loanDetails?.data?.amount,
+          //   duration: loanDetails?.data?.duration,
+          // },
+          // reference: firstReference ? firstReference.name : "N/A",
+          // status: lr.status,
+          // nextPayDate: lr.next_pay_date,
+        };
+      })
+    );
+    
+    
+    
+    return { success: true, data: formattedRequests };
+  } catch (error) {
+    console.error('Unexpected error fetching customer loan requests:', error);
+    return { success: false, error };
+  }
+};
+
+
 
 /**
  * Get detailed information about a specific loan request
@@ -365,6 +654,23 @@ export const uploadLoanDocument = async (
 /**
  * Get customer ID from auth ID
  */
+
+
+export const allCustomers = async(customerId: string) =>{
+  try {
+    const {data , error} = await supabase.from('customers').select('*').eq('id' , customerId) .single()
+
+    if (error) {
+      console.error('Error fetching customer ID:', error);
+      return { success: false, error };
+    }
+    return {success: true , data: data}
+  } catch (error) {
+    console.error('Unexpected error fetching customer ID:', error);
+    return { success: false, error };
+  }
+}
+
 export const getCustomerIdFromAuthId = async (authId: string) => {
   try {
     const { data, error } = await supabase
@@ -509,4 +815,609 @@ export const formatLoanRequestForDisplay = (loanRequest: LoanRequestWithDetails)
       uploadedAt: doc.created_at
     })) : []
   };
+};
+
+export const approveRequest = async (loanId: string , requestStatus: string) => {
+  try {
+    // Get loan requests
+    const { data: loanRequestUpdate, error: loanRequestError } = await supabase
+    .from('loan_requests')
+    .update({ admin_request_status: requestStatus })
+    .eq('id', loanId)
+    .select()
+
+    const { data: statusData, error: statusErrror } = await supabase
+    .from('loan_requests')
+    .update({ status: 'reviewing documents'  })
+    .eq('id', loanId)
+    .select()
+    
+    if (loanRequestError) {
+      console.error('Error fetching loan requests:', loanRequestError);
+      return { success: false, error: loanRequestError };
+    }
+
+    if (statusErrror) {
+      console.error('Error fetching loan requests:', statusErrror);
+      return { success: false, error: statusErrror };
+    }
+
+    
+    return { success: true, data: loanRequestUpdate  , status: statusData };
+
+  } catch(err) {
+
+  }
+}
+
+
+export const LoanDetailsFromId = async (loanId:string) => {
+  try {
+    // Get loan requests
+    const { data: loanRequests, error: loanRequestsError } =  await supabase
+    .from('loan_requests')
+    .select('*')
+    .eq('id' , loanId )
+    .order('created_at', { ascending: false })
+    
+    if (loanRequestsError) {
+      console.error('Error fetching loan requests:', loanRequestsError);
+      return { success: false, error: loanRequestsError };
+    }
+
+    
+    // Get references for all loan requests
+    const loanRequestIds = loanRequests.map(lr => lr.id);
+    
+    const { data: references, error: referencesError } = await supabase
+      .from('references')
+      .select('*')
+      .in('loan_request_id', loanRequestIds);
+    
+    if (referencesError) {
+      console.error('Error fetching references:', referencesError);
+      return { success: false, error: referencesError };
+    }
+
+    
+    console.log(references)
+
+    
+    // Format data for the list view
+    // const formattedRequests: LoanRequestListItem[] = loanRequests.map(async lr => {
+    //   // Find the first reference to display
+    //   const firstReference = references.find(
+    //     ref => ref.loan_request_id == lr.id && ref.reference_order == 1
+    //   );
+
+      
+
+    //   // const firstReference  = references.find((ref)=>{
+    //   //   console.log(`Loan Request Id ${ref.loan_request_id}`)
+    //   //   console.log(`LR ${lr.id}`)
+    //   //   console.log(`Order is ${ref.reference_order}`)
+    //   // })
+      
+    //   // Map pay frequency to display text
+    //   const payFrequencyMap = {
+    //     '1month': 'Once a month',
+    //     '2weeks': 'Every 2 weeks',
+    //     'bimonthly': 'Twice a month',
+    //     '1week': 'Every week'
+    //   };
+
+
+    //   let loanDetails = await getLoanById(lr?.loan_id)
+
+    //   return {
+    //     id: lr.id,
+    //     requestDate: lr.request_date,
+    //     loanPackage: {
+    //       amount: loanDetails?.data?.amount,
+    //       duration: loanDetails?.data?.duration
+    //     },
+    //     payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+    //     reference: firstReference ? firstReference.name : 'N/A',
+    //     status: lr.status,
+    //     nextPayDate: lr.next_pay_date
+    //   };
+    // });
+    const formattedRequests: LoanRequestListItem[] = await Promise.all(
+      loanRequests.map(async (lr) => {
+        // Find the first reference to display
+        // const firstReference = references.find(
+        //   (ref) => ref.loan_request_id == lr.id && ref.reference_order == 1
+        // );
+    
+        // Map pay frequency to display text
+        
+        let loanDetails = await getLoanById(lr?.loan_id);
+
+        let customerDetails = await allCustomers(lr?.customer_id)
+
+        const payFrequencyMap = {
+          "1month": "Once a month",
+          "2weeks": "Every 2 weeks",
+          "bimonthly": "Twice a month",
+          "1week": "Every week",
+        };
+    
+    
+        return {
+          id: lr.id,
+          customerData: customerDetails?.data,
+          loanDetails: lr ,
+          loanPackage: {
+            amount: loanDetails?.data?.amount,
+            duration: loanDetails?.data?.duration,
+          },
+          payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+          reference: references
+
+          // requestDate: lr.request_date,
+          // loanPackage: {
+          //   amount: loanDetails?.data?.amount,
+          //   duration: loanDetails?.data?.duration,
+          // },
+          // reference: firstReference ? firstReference.name : "N/A",
+          // status: lr.status,
+          // nextPayDate: lr.next_pay_date,
+        };
+      })
+    );
+    
+    
+    
+    return { success: true, data: formattedRequests };
+  } catch (error) {
+    console.error('Unexpected error fetching customer loan requests:', error);
+    return { success: false, error };
+  }
+};
+  
+  
+
+export async function updateLoanStage(requestId , status) {
+    try {
+      // Get loan requests
+      const { data: loanRequestUpdate, error: loanRequestError } = await supabase
+      .from('loan_requests')
+      .update({ status: status })
+      .eq('id', requestId)
+      .select()
+      
+      if (loanRequestError) {
+        console.error('Error fetching loan requests:', loanRequestError);
+        return { success: false, error: loanRequestError };
+      }
+      return { success: true, data: loanRequestUpdate  };
+  
+    } catch(err) {
+  
+    }
+}
+
+
+export async function updateRequestStage(requestId , stage) {
+  try {
+    // Get loan requests
+    const { data: loanRequestUpdate, error: loanRequestError } = await supabase
+    .from('loan_requests')
+    .update({ request_stage: stage })
+    .eq('id', requestId)
+    .select()
+    
+    if (loanRequestError) {
+      console.error('Error fetching loan requests:', loanRequestError);
+      return { success: false, error: loanRequestError };
+    }
+    return { success: true, data: loanRequestUpdate  };
+
+  } catch(err) {
+
+  }
+}
+
+
+
+export async function updatePerceptionStage(perId , stage) {
+  try {
+    // Get loan requests
+    const { data: loanRequestUpdate, error: loanRequestError } = await supabase
+    .from('perceptions')
+    .update({ stage: stage })
+    .eq('id', perId)
+    .select()
+    
+    if (loanRequestError) {
+      console.error('Error fetching loan requests:', loanRequestError);
+      return { success: false, error: loanRequestError };
+    }
+    return { success: true, data: loanRequestUpdate  };
+
+  } catch(err) {
+
+  }
+}
+
+
+
+
+export const fetchPerceptionStage = async (perId) => {
+  try {
+    const { data, error } = await supabase
+      .from('perceptions')
+      .select('stage')
+      .eq('id' , perId)
+    if (error) {
+      console.error(`Error fetching status:`, error);
+      return { success: false, error };
+    }
+    return { success: true, data: data };
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return { success: false, error };
+  }
+};
+
+
+
+
+
+export const fetchLoanRequests = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('loan_requests')
+      .select('*')  // Select all columns, or you can specify the ones you need
+      // .not('admin_request_status', 'eq', 'pending')
+      // .not('admin_request_status', 'eq', 'rejected');
+    
+    if (error) {
+      console.error(`Error fetching status:`, error);
+      return { success: false, error };
+    }
+    
+    return { success: true, data: data };
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return { success: false, error };
+  }
+};
+
+
+export const fetchPerceptionRequests = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('perceptions')
+      .select('*'); // Select all columns, or specify needed ones
+
+    if (error) {
+      console.error(`Error fetching perception data:`, error);
+      return { success: false, error };
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return { success: false, error };
+  }
+};
+
+
+
+
+
+
+export const getLoanIds = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('loan_requests')
+      .select('id')
+      .not('admin_request_status', 'eq', 'pending')
+      .not('admin_request_status', 'eq', 'rejected')
+      .order('created_at', { ascending: true });
+
+    
+    if (error) {
+      console.error('Error fetching loan id:', error);
+      return { success: false, error };
+    }
+    
+    return { success: true, data: data };
+  } catch (error) {
+    console.error('Unexpected error fetching loan ids:', error);
+    return { success: false, error: error };
+  }
+};
+
+
+export const addPerception = async (loanId, stage) => {
+  try {
+    // Check if a perception already exists for the given loanId
+    const { data: existingPerception, error: fetchError } = await supabase
+      .from('perceptions')
+      .select('*')
+      .eq('loan_id', loanId)
+      .single(); // Assuming only one perception should exist per loanId
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // Ignore "No rows found" error
+      console.error('Error checking existing perception:', fetchError);
+      return { success: false, error: fetchError };
+    }
+
+    if (existingPerception) {
+      return { success: false, message: 'Perception for this loan already exists.' };
+    }
+
+    // Insert new perception if it doesn't already exist
+    const { data, error } = await supabase
+      .from('perceptions')
+      .insert({
+        loan_id: loanId,
+        stage: stage
+      })
+      .select();
+
+    if (error) {
+      console.error('Error adding perception:', error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return { success: false, error };
+  }
+};
+
+
+
+
+// export const getPerceptionsWithDetails = async () => {
+
+//   try {
+//     // Get all perceptions
+//     const { data: perceptions, error: perceptionsError } = await supabase
+//       .from('perceptions')
+//       .select('*')
+//       .order('created_at', { ascending: false });
+    
+//     if (perceptionsError) {
+//       console.error('Error fetching perceptions:', perceptionsError);
+//       return { success: false, error: perceptionsError };
+//     }
+
+
+//     // Process each perception individually instead of batch processing
+//     const formattedPerceptions = await Promise.all(
+//       perceptions.map(async (perception) => {
+
+//         // For each perception, directly fetch the corresponding loan request
+//         let loanRequest = null;
+        
+
+//            console.log(perception.loan_id) 
+
+           
+
+//           const { data: loanData, error: loanError } = await supabase
+//             .from('loan_requests')
+//             .select('*')
+//             .eq('id', perception?.loan_id)
+
+//             console.log(loanData)
+          
+//           if (loanError) {
+//             console.error(`Error fetching loan request for perception ${perception.id}:`, loanError);
+//           } else {
+//             loanRequest = loanData;
+//             console.log(loanData)
+//           }
+        
+//         // If no loan request found, return basic perception data
+//         if (!loanRequest) {
+//           return {
+//             id: perception.id,
+//             created_at: perception.created_at,
+//             stage: perception.stage,
+//             loan_id: perception.loan_id,
+//             loanDetails: null,
+//             customerData: null,
+//             loanPackage: null,
+//             payFrequency: null
+//           };
+//         }
+
+//         // Get loan package details
+//         let loanDetails = await getLoanById(loanRequest.loan_id);
+        
+//         // Get customer details
+//         let customerDetails = await allCustomers(loanRequest.customer_id);
+
+//         // Map pay frequency to display text
+//         const payFrequencyMap = {
+//           "1month": "Once a month",
+//           "2weeks": "Every 2 weeks",
+//           "bimonthly": "Twice a month",
+//           "1week": "Every week",
+//         };
+
+//         return {
+//           id: perception.id,
+//           created_at: perception.created_at,
+//           stage: perception.stage,
+//           loan_id: perception.loan_id,
+//           loanDetails: loanRequest,
+//           customerData: customerDetails?.data,
+//           loanPackage: {
+//             amount: loanDetails?.data?.amount,
+//             duration: loanDetails?.data?.duration,
+//           },
+//           payFrequency: payFrequencyMap[loanRequest.pay_frequency] || loanRequest.pay_frequency,
+//         };
+//       })
+//     );
+    
+//     return { success: true, data: formattedPerceptions };
+//   } catch (error) {
+//     console.error('Unexpected error fetching perceptions with details:', error);
+//     return { success: false, error };
+//   }
+// };
+
+
+export const getPerceptionDetails = async () => {
+  try {
+    // 1️⃣ Fetch all perceptions
+    const { data: perceptions, error: perceptionError } = await supabase
+      .from("perceptions")
+      .select("*");
+
+    if (perceptionError || !perceptions || perceptions.length === 0) {
+      console.error("Error fetching perceptions:", perceptionError);
+      return { success: false, error: "No perceptions found" };
+    }
+
+    const results = await Promise.all(
+      perceptions.map(async (perception) => {
+        const loanId = perception.loan_id;
+        console.log(loanId)
+        const { data: loanData, error: loanError } = await supabase
+          .from("loan_requests")
+          .select("*")
+          .eq("id", loanId)
+
+        if (loanError || !loanData) {
+          console.error(`Error fetching loan request for loan_id ${loanId}:`, loanError);
+          return null;
+        }
+        console.log(loanData)
+
+        const customerId = loanData[0]?.customer_id
+        const loan_id = loanData[0]?.loan_id
+
+        // 4️⃣ Fetch loan details
+        const loanPackage = await getLoanById(loan_id);
+        if (!loanPackage) {
+          console.error(`Loan package not found for loan_id ${loan_id}`);
+          return null;
+        }
+
+        console.log(loanPackage)
+
+        // 5️⃣ Fetch customer details
+        const customerDetails = await allCustomers(customerId);
+        if (!customerDetails) {
+          console.error(`Customer not found for customer_id ${customerId}`);
+          return null;
+        }
+
+        console.log(customerDetails)
+
+        // 6️⃣ Return structured object for each perception
+        return {
+          perceptionData: perception, // Perception details
+          loanData, // Loan request details
+          loanPackage, // Loan details (amount, duration)
+          customerData: customerDetails // Customer info
+        };
+      })
+    );
+
+    // 7️⃣ Filter out any null values (failed fetches)
+    const filteredResults = results.filter((item) => item !== null);
+    console.log(filteredResults)
+    return { success: true, data: filteredResults };
+
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return { success: false, error: "Unexpected error occurred" };
+  }
+};
+
+
+
+export const getSinglePerception = async (perceptionId) => {
+  try {
+    // 1️⃣ Fetch all perceptions
+    const { data: perceptions, error: perceptionError } = await supabase
+      .from("perceptions")
+      .select("*")
+      .eq('id' , perceptionId)
+
+    if (perceptionError || !perceptions || perceptions.length === 0) {
+      console.error("Error fetching perceptions:", perceptionError);
+      return { success: false, error: "No perceptions found" };
+    }
+
+    const results = await Promise.all(
+      perceptions.map(async (perception) => {
+        const loanId = perception.loan_id;
+        console.log(loanId)
+        const { data: loanData, error: loanError } = await supabase
+          .from("loan_requests")
+          .select("*")
+          .eq("id", loanId)
+
+        if (loanError || !loanData) {
+          console.error(`Error fetching loan request for loan_id ${loanId}:`, loanError);
+          return null;
+        }
+        console.log(loanData)
+
+        const customerId = loanData[0]?.customer_id
+        const loan_id = loanData[0]?.loan_id
+
+        // 4️⃣ Fetch loan details
+        const loanPackage = await getLoanById(loan_id);
+        if (!loanPackage) {
+          console.error(`Loan package not found for loan_id ${loan_id}`);
+          return null;
+        }
+
+        console.log(loanPackage)
+
+        // 5️⃣ Fetch customer details
+        const customerDetails = await allCustomers(customerId);
+        if (!customerDetails) {
+          console.error(`Customer not found for customer_id ${customerId}`);
+          return null;
+        }
+
+
+        const { data: references, error: referencesError } = await supabase
+      .from('references')
+      .select('*')
+      .eq('loan_request_id', loanId);
+
+      console.log(references)
+    
+    if (referencesError) {
+      console.error('Error fetching references:', referencesError);
+      return { success: false, error: referencesError };
+    }
+
+
+        // 6️⃣ Return structured object for each perception
+        return {
+          perceptionData: perception, // Perception details
+          loanData, // Loan request details
+          loanPackage, // Loan details (amount, duration)
+          customerData: customerDetails, // Customer info,
+          reference: references
+
+          
+        };
+      })
+    );
+
+    // 7️⃣ Filter out any null values (failed fetches)
+    const filteredResults = results.filter((item) => item !== null);
+    console.log(filteredResults)
+    return { success: true, data: filteredResults };
+
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return { success: false, error: "Unexpected error occurred" };
+  }
 };

@@ -3,9 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 // Get environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const serviceKey ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkbHV5dG9teWNtcW96bWNkbnp4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MDU5OTc2MywiZXhwIjoyMDU2MTc1NzYzfQ.Hph3CyDwi0VtnUiNOGtb1-XoFMmq4-LeHu3nbhIijOI'
+
 
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a Supabase client with admin privileges
+export const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 // Test function to verify connection
 export const testSupabaseConnection = async () => {

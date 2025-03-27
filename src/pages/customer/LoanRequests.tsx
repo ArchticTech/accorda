@@ -75,13 +75,7 @@ const ActionsDropdown = ({ loanId }) => {
               <Eye className="h-4 w-4 mr-2" />
               View Details
             </Link>
-            <button
-              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => alert(`View documents for loan request #${loanId}`)}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              View Documents
-            </button>
+              
           </div>
         </div>
       )}
@@ -102,6 +96,7 @@ const LoanRequests = () => {
 
   useEffect(() => {
     const fetchLoanRequests = async () => {
+      console.log
       if (!user) return;
       
       try {
@@ -118,11 +113,13 @@ const LoanRequests = () => {
         
         // Get loan requests
         const result = await getCustomerLoanRequests(customerIdResult.data);
+        console.log(result)
         
         if (result.success) {
           setLoanRequests(result.data);
         } else {
-          setError('Failed to fetch loan requests');
+          console.log(result  )
+          setError('`Failed to fetch loan requests`');
         }
       } catch (err) {
         console.error('Error fetching loan requests:', err);
@@ -174,14 +171,18 @@ const LoanRequests = () => {
   const sortedAndFilteredData = useMemo(() => {
     // Filter data based on search term
     let filteredData = [...loanRequests];
+    console.log(filteredData)
     if (searchTerm) {
+
       const lowerCaseSearchTerm = searchTerm.toLowerCase();
-      filteredData = filteredData.filter(item => 
-        item.id.toLowerCase().includes(lowerCaseSearchTerm) ||
-        item.reference.toLowerCase().includes(lowerCaseSearchTerm) ||
+      // filteredData = filteredData.filter(item => 
+    
+      // );
+      filteredData = filteredData.filter((item)=>{
+        item.reference.toLowerCase()  .includes(lowerCaseSearchTerm) ||
         item.status.toLowerCase().includes(lowerCaseSearchTerm) ||
         item.payFrequency.toLowerCase().includes(lowerCaseSearchTerm)
-      );
+      })
     }
     
     // Sort data
@@ -414,7 +415,7 @@ const LoanRequests = () => {
                     {formatDate(row.nextPayDate)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusChip status={row.status} />
+                    <StatusChip status={row.admin_request_status !== 'pending' ? row?.status : row?.admin_request_status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <ActionsDropdown loanId={row.id} />
@@ -508,11 +509,7 @@ const LoanRequests = () => {
         </div>
       </div>
       
-      <div className="mt-4">
-        <p className="text-sm text-gray-500">
-          <strong>Note:</strong> You can view the details of each loan request by clicking on the action menu.
-        </p>
-      </div>
+     
     </div>
   );
 };

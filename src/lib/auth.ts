@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, supabaseAdmin } from './supabase';
 import { SignupFormData } from './types';
 
 export const signUp = async (data: SignupFormData) => {
@@ -27,6 +27,7 @@ export const signUp = async (data: SignupFormData) => {
         last_name: data.lastName,
         email: data.email,
         phone: data.phoneNumber,
+        role: "customer"
       });
 
     if (customerError) {
@@ -41,21 +42,46 @@ export const signUp = async (data: SignupFormData) => {
   }
 };
 
+
 export const signIn = async (email: string, password: string) => {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // First, authenticate the user
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      return { success: false, error };
+    if (authError) {
+      return { success: false, error: authError };
     }
 
-    return { success: true, user: data.user };
+    // If authentication is successful, check the user's role in the customers table
+    const { data: customerData, error: customerError } = await supabase
+      .from('customers')
+      .select('role')
+      .eq('auth_id', authData.user?.id)
+      .single();
+
+    if (customerError) {
+      console.error('Error fetching user role:', customerError);
+      return { 
+        success: false, 
+        error: { message: 'Unable to retrieve user role. Please contact support.' }
+      };
+    }
+
+    // Return the authentication result with the user's role
+    return { 
+      success: true, 
+      user: authData.user,
+      role: customerData?.role || null
+    };
   } catch (error) {
     console.error('Unexpected error during signin:', error);
-    return { success: false, error };
+    return { 
+      success: false, 
+      error: { message: 'An unexpected error occurred. Please try again.' }
+    };
   }
 };
 
@@ -86,5 +112,54 @@ export const getCurrentUser = async () => {
   } catch (error) {
     console.error('Unexpected error getting current user:', error);
     return { success: false, error };
+  }
+};
+
+export const listOfUsers = async() => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('role' , 'customer')
+        .order('created_at', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching loans:', error);
+        return { success: false, error };
+      }
+      console.log(data)
+      return { success: true, data };
+    } catch (error) {
+      console.error('Unexpected error fetching loans:', error);
+      return { success: false, error };
+    }
+}
+
+export const deleteCustomerAdmin = async (customerId , authId) => {
+  try {
+    // Delete customer from customers_table
+    const { error: deleteCustomerError } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', customerId);
+
+    if (deleteCustomerError) {
+      console.error('Error deleting customer:', deleteCustomerError.message);
+      return { success: false, message: 'Failed to delete customer' };
+    }
+
+    // Delete user from Supabase authentication table
+    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(authId);
+
+    if (deleteAuthError) {
+      console.error('Error deleting auth user:', deleteAuthError.message);
+      return { success: false, message: 'Customer deleted, but failed to remove authentication' };
+    }
+
+    return { success: true, message: 'Customer and authentication user deleted successfully' };
+
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return { success: false, message: 'Unexpected error occurred' };
   }
 };

@@ -42,8 +42,16 @@ const LoginForm = () => {
       
       if (result.success) {
         console.log('User logged in successfully:', result.user);
-        // Redirect to customer dashboard
-        navigate('/customer');
+        
+        // Redirect based on user role
+        if (result.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (result.role === 'customer') {
+          navigate('/customer/dashboard');
+        } else {
+          // Fallback for unexpected roles
+          setError('Unauthorized access. Please contact support.');
+        }
       } else {
         setError(result.error?.message || 'Invalid email or password. Please try again.');
       }

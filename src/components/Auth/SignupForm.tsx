@@ -44,7 +44,7 @@ const SignupForm = () => {
         // Redirect to login page with success message
         navigate('/auth/login', { 
           state: { 
-            message: 'Account created successfully! Please check your email to confirm your account before logging in.' 
+            message: 'Account created successfully!.' 
           } 
         });
       } else {

@@ -134,7 +134,7 @@ const LoanApplicationStepper = () => {
       marketingOptIn: false,
     },
     resolver: yupResolver(getValidationSchema(currentStep)),
-    mode: 'onChange'
+    mode: 'all'
   });
 
   const { handleSubmit, trigger, formState: { isValid, errors } } = methods;
