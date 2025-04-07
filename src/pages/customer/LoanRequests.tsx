@@ -96,7 +96,6 @@ const LoanRequests = () => {
 
   useEffect(() => {
     const fetchLoanRequests = async () => {
-      console.log
       if (!user) return;
       
       try {
@@ -113,8 +112,8 @@ const LoanRequests = () => {
         
         // Get loan requests
         const result = await getCustomerLoanRequests(customerIdResult.data);
-        console.log(result)
         
+        console.log('result', result);
         if (result.success) {
           setLoanRequests(result.data);
         } else {

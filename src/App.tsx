@@ -42,7 +42,6 @@ function App() {
             <Route index element={<Navigate to="/customer/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="loan-requests" element={<LoanRequests />} />
-            
             <Route path="new-loan" element={<NewLoan />} />
             <Route path="profile" element={<Profile />} />
 
