@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, MoreVertical, Eye, FileText } from 'lucide-react';
+import { MoreVertical, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getCustomerIdFromAuthId, getCustomerLoanRequests } from '../../lib/loans';
 import { LoanRequestListItem } from '../../lib/types';

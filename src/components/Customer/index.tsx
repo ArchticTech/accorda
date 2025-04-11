@@ -1,4 +1,3 @@
-import React from 'react';
 import Sidebar from './Sidebar';
 import Layout from './Layout';
 import LoanApplicationStepper from './LoanForm';

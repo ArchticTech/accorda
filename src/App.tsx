@@ -1,10 +1,7 @@
-import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 // Import pages
 import WebPage from './pages/web'
-import CustomerPage from './pages/customer'
-import AdminPage from './pages/admin'
 import AuthPage from './pages/auth'
 import LoginPage from './pages/auth/login'
 import SignupPage from './pages/auth/signup'
@@ -14,7 +11,6 @@ import AdminLoanRequestDetails from './pages/admin/LoanDetails'
 import { Admin, Customer } from './components'
 import Dashboard from './pages/customer/Dashboard'
 import LoanRequests from './pages/customer/LoanRequests'
-import LoanRequestDetails from './pages/customer/LoanRequestDetails'
 import NewLoan from './pages/customer/NewLoan'
 import Profile from './pages/customer/Profile'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -44,8 +40,6 @@ function App() {
             <Route path="loan-requests" element={<LoanRequests />} />
             <Route path="new-loan" element={<NewLoan />} />
             <Route path="profile" element={<Profile />} />
-
-
           </Route>
           
           {/* <Route path="/admin" element={<AdminPage />} /> */}
@@ -63,9 +57,6 @@ function App() {
           <Route path="perception-view/:id" element={ <AdminPerceptionView /> } />
 
           <Route path="customers" element={ <AdminCustomers /> } />
-
-
-
 
           </Route>
           

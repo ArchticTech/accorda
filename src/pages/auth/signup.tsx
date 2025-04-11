@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { Auth } from '../../components';
+import { SignupForm } from '../../components/Auth';
 
 function SignupPage() {
   return (
@@ -18,7 +17,7 @@ function SignupPage() {
           </p>
         </div>
         <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <Auth.SignupForm />
+          <SignupForm />
           <div className="text-center mt-4">
             <Link to="/web" className="text-sm font-medium text-blue-600 hover:text-blue-500">
               Back to home

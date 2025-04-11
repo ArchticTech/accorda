@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Clock, DollarSign, Calendar, User, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, DollarSign, Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getCustomerIdFromAuthId, getLoanRequestDetails, formatLoanRequestForDisplay } from '../../lib/loans';
-import { LoanRequestWithDetails } from '../../lib/types';
 
 // Status badge component
 const StatusBadge = ({ status }) => {
