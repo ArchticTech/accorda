@@ -1,5 +1,3 @@
-// supabase/functions/get-customer-loan-requests/index.ts
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
@@ -12,42 +10,49 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+
   try {
-    const { customerId } = await req.json();
-
-    if (!customerId) {
-      return new Response(JSON.stringify({ success: false, error: "Missing customerId" }), { status: 400 });
-    }
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! // use service role for full access (secure on backend only)
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const { admin_request_status } = await req.json();
+
     // 1. Get loan requests
-    const { data: loanRequests, error: loanRequestsError } = await supabase
+    const loanQuery = supabase
       .from("loan_requests")
       .select("*")
-      .eq("customer_id", customerId)
       .order("created_at", { ascending: false });
 
-    if (loanRequestsError) {
-      return new Response(JSON.stringify({ success: false, error: loanRequestsError.message }), { status: 500 });
+    if (admin_request_status) {
+      loanQuery.eq("admin_request_status", admin_request_status);
     }
 
-    const loanRequestIds = loanRequests.map((lr) => lr.id);
+    const { data: loanRequests, error: loanRequestsError } = await loanQuery;
 
-    // 2. Get references
+    if (loanRequestsError) {
+      return new Response(JSON.stringify({ success: false, error: loanRequestsError.message }), {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
+
+    // 2. Get all references
+    const loanRequestIds = loanRequests.map((lr) => lr.id);
     const { data: references, error: referencesError } = await supabase
       .from("references")
       .select("*")
       .in("loan_request_id", loanRequestIds);
 
     if (referencesError) {
-      return new Response(JSON.stringify({ success: false, error: referencesError.message }), { status: 500 });
+      return new Response(JSON.stringify({ success: false, error: referencesError.message }), {
+        status: 500,
+        headers: corsHeaders,
+      });
     }
 
-    // Pay frequency map
+    // 3. Get loan and customer details, then format
     const payFrequencyMap: Record<string, string> = {
       "1month": "Once a month",
       "2weeks": "Every 2 weeks",
@@ -55,40 +60,42 @@ serve(async (req) => {
       "1week": "Every week",
     };
 
-    // 3. Format and enrich each request
     const formattedRequests = await Promise.all(
       loanRequests.map(async (lr) => {
-        const firstReference = references.find(
-          (ref) => ref.loan_request_id === lr.id && ref.reference_order === 1
-        );
-
-        const { data: loanDetails, error: loanError } = await supabase
+        const { data: loanDetails } = await supabase
           .from("loans")
           .select("amount, duration")
           .eq("id", lr.loan_id)
           .single();
 
+        const { data: customerDetails } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("id", lr.customer_id)
+          .single();
+
         return {
           id: lr.id,
-          requestDate: lr.request_date,
+          customerData: customerDetails,
+          loanDetails: lr,
           loanPackage: {
-            amount: loanDetails?.amount || null,
-            duration: loanDetails?.duration || null,
+            amount: loanDetails?.amount,
+            duration: loanDetails?.duration,
           },
           payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
-          reference: firstReference?.name || "N/A",
-          status: lr.status,
-          nextPayDate: lr.next_pay_date,
-          admin_request_status: lr.admin_request_status,
         };
       })
     );
 
     return new Response(JSON.stringify({ success: true, data: formattedRequests }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("Unexpected error:", err);
-    return new Response(JSON.stringify({ success: false, error: "Internal server error" }), { status: 500 });
+    return new Response(JSON.stringify({ success: false, error: "Internal Server Error" }), {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 });

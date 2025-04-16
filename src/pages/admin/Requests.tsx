@@ -1,14 +1,12 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ChevronDown, MoreVertical, Eye, FileText } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { MoreVertical, Eye, FileText } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import {
-  getCustomerIdFromAuthId,
-  getAllLoanRequests,
   approveRequest,
 } from "../../lib/loans";
-import { LoanRequestListItem } from "../../lib/types";
 import { ToastContainer, toast, Bounce } from "react-toastify";
+import { supabase } from "../../lib/supabase";
 
 // Status chip component
 const StatusChip = ({ status }) => {
@@ -172,13 +170,24 @@ const AdminRequests = () => {
      }
 
       // Get loan requests
-      const result = await getAllLoanRequests();
-      if (result.success) {
-        setLoanRequests(result?.data);
+      // const result = await getAllLoanRequests();
+      // if (result.success) {
+      //   setLoanRequests(result?.data);
+      // } else {
+      //   console.log(result);
+      //   setError("`Failed to fetch loan requests`");
+      // }
+      const { data, error } = await supabase.functions.invoke('get-all-loan-requests', {
+        body: JSON.stringify({}), // No admin_request_status passed
+      });
+      
+      if (error) {
+        console.error('Function error:', error);
+        setError('`Failed to fetch loan requests`');
       } else {
-        console.log(result);
-        setError("`Failed to fetch loan requests`");
+        setLoanRequests(data.data);
       }
+
     } catch (err) {
       console.error("Error fetching loan requests:", err);
       setError("An unexpected error occurred");

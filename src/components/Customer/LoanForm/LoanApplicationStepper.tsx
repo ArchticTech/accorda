@@ -10,8 +10,9 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import IncomeSourceStep from './steps/IncomeSourceStep';
 import LoanDetailsStep from './steps/LoanDetailsStep';
 import ReviewStep from './steps/ReviewStep';
-import { getAvailableLoans, getCustomerIdFromAuthId, createLoanRequest } from '../../../lib/loans';
+import { getCustomerIdFromAuthId } from '../../../lib/loans';
 import { Loan } from '../../../lib/types';
+import { supabase } from "/src/lib/supabase";
 
 // Define validation schemas for each step
 const personalInfoSchema = yup.object({
@@ -143,11 +144,11 @@ const LoanApplicationStepper = () => {
   useEffect(() => {
     const fetchLoans = async () => {
       try {
-        const result = await getAvailableLoans();
-        if (result.success) {
-          setAvailableLoans(result.data);
+        const { data, error } = await supabase.functions.invoke('get-available-loans');
+        if (error) {
+          console.error('Failed to fetch loans | Function error:', error);
         } else {
-          console.error('Failed to fetch loans:', result.error);
+          setAvailableLoans(data.data); // because your edge function returns { success, data }
         }
       } catch (err) {
         console.error('Error fetching loans:', err);
@@ -188,7 +189,7 @@ const LoanApplicationStepper = () => {
     }
   };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (formData) => {
     if (!user) {
       setError('You must be logged in to submit a loan application');
       return;
@@ -208,18 +209,24 @@ const LoanApplicationStepper = () => {
       }
       
       // Create loan request
-      const result = await createLoanRequest(customerIdResult.data, data);
+      const { data, error } = await supabase.functions.invoke('create-loan-request', {
+        body: JSON.stringify({
+          customerId: customerIdResult.data,
+          formData: formData,
+        }),
+      });
       
-      if (result.success) {
-        // Redirect to loan requests page
+      if (error) {
+        setError('Failed to submit loan application');
+        console.error('Function error:', error);
+      } else {
         navigate('/customer/loan-requests', { 
           state: { 
             message: 'Loan application submitted successfully!' 
           } 
         });
-      } else {
-        setError(result.error?.message || 'Failed to submit loan application');
       }
+
     } catch (err) {
       console.error('Error submitting loan application:', err);
       setError('An unexpected error occurred');

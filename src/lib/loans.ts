@@ -8,25 +8,25 @@ import {
 /**
  * Fetch all available loans
  */
-export const getAvailableLoans = async () => {
-  try {
-    const { data, error } = await supabase
-      .from("loans")
-      .select("*")
-      .eq("is_active", true)
-      .order("amount", { ascending: true });
+// export const getAvailableLoans = async () => {
+//   try {
+//     const { data, error } = await supabase
+//       .from("loans")
+//       .select("*")
+//       .eq("is_active", true)
+//       .order("amount", { ascending: true });
 
-    if (error) {
-      console.error("Error fetching loans:", error);
-      return { success: false, error };
-    }
+//     if (error) {
+//       console.error("Error fetching loans:", error);
+//       return { success: false, error };
+//     }
 
-    return { success: true, data };
-  } catch (error) {
-    console.error("Unexpected error fetching loans:", error);
-    return { success: false, error };
-  }
-};
+//     return { success: true, data };
+//   } catch (error) {
+//     console.error("Unexpected error fetching loans:", error);
+//     return { success: false, error };
+//   }
+// };
 
 /**
  * Fetch a specific loan by ID
@@ -54,254 +54,254 @@ export const getLoanById = async (loanId: string) => {
 /**
  * Create a new loan request
  */
-export const createLoanRequest = async (
-  customerId: string,
-  formData: LoanApplicationFormData
-) => {
-  try {
-    // Start a transaction
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+// export const createLoanRequest = async (
+//   customerId: string,
+//   formData: LoanApplicationFormData
+// ) => {
+//   try {
+//     // Start a transaction
+//     const {
+//       data: { session },
+//     } = await supabase.auth.getSession();
 
-    if (!session) {
-      return {
-        success: false,
-        error: { message: "User not authenticated" },
-      };
-    }
+//     if (!session) {
+//       return {
+//         success: false,
+//         error: { message: "User not authenticated" },
+//       };
+//     }
 
-    // Format birth date
-    const birthDate = `${
-      formData.birthDate.year
-    }-${formData.birthDate.month.padStart(
-      2,
-      "0"
-    )}-${formData.birthDate.day.padStart(2, "0")}`;
+//     // Format birth date
+//     const birthDate = `${
+//       formData.birthDate.year
+//     }-${formData.birthDate.month.padStart(
+//       2,
+//       "0"
+//     )}-${formData.birthDate.day.padStart(2, "0")}`;
 
-    // Insert loan request
-    const { data: loanRequest, error: loanRequestError } = await supabase
-      .from("loan_requests")
-      .insert({
-        customer_id: customerId,
-        loan_id: formData.selectedLoan.id,
+//     // Insert loan request
+//     const { data: loanRequest, error: loanRequestError } = await supabase
+//       .from("loan_requests")
+//       .insert({
+//         customer_id: customerId,
+//         loan_id: formData.selectedLoan.id,
 
-        // Personal Information
-        birth_date: birthDate,
-        gender: formData.gender,
-        social_insurance_number: formData.socialInsuranceNumber,
+//         // Personal Information
+//         birth_date: birthDate,
+//         gender: formData.gender,
+//         social_insurance_number: formData.socialInsuranceNumber,
 
-        // Address
-        address_line1: formData.addressLine1,
-        address_line2: formData.addressLine2,
-        city: formData.city,
-        province: formData.province,
-        postal_code: formData.postalCode,
+//         // Address
+//         address_line1: formData.addressLine1,
+//         address_line2: formData.addressLine2,
+//         city: formData.city,
+//         province: formData.province,
+//         postal_code: formData.postalCode,
 
-        // Income Source
-        income_source: formData.incomeSource,
-        bank_institution: formData.bankInstitution,
-        pay_frequency: formData.payFrequency,
-        next_pay_date: formData.nextPayDate,
-        consumer_proposal: formData.consumerProposal === "yes",
-        bankruptcy: formData.bankruptcy === "yes",
+//         // Income Source
+//         income_source: formData.incomeSource,
+//         bank_institution: formData.bankInstitution,
+//         pay_frequency: formData.payFrequency,
+//         next_pay_date: formData.nextPayDate,
+//         consumer_proposal: formData.consumerProposal === "yes",
+//         bankruptcy: formData.bankruptcy === "yes",
 
-        // Loan Details
-        file_treatment_method: formData.fileTreatmentMethod,
-        terms_accepted: formData.termsAccepted,
-        privacy_policy_accepted: formData.privacyPolicyAccepted,
-        marketing_opt_in: formData.marketingOptIn,
+//         // Loan Details
+//         file_treatment_method: formData.fileTreatmentMethod,
+//         terms_accepted: formData.termsAccepted,
+//         privacy_policy_accepted: formData.privacyPolicyAccepted,
+//         marketing_opt_in: formData.marketingOptIn,
 
-        // Status (default is 'pending')
-        status: "pending",
-      })
-      .select()
-      .single();
+//         // Status (default is 'pending')
+//         status: "pending",
+//       })
+//       .select()
+//       .single();
 
-    if (loanRequestError) {
-      console.error("Error creating loan request:", loanRequestError);
-      return { success: false, error: loanRequestError };
-    }
+//     if (loanRequestError) {
+//       console.error("Error creating loan request:", loanRequestError);
+//       return { success: false, error: loanRequestError };
+//     }
 
-    // Insert references
-    const referencesData = [
-      {
-        loan_request_id: loanRequest.id,
-        name: formData.reference1.name,
-        phone: formData.reference1.phone,
-        relationship: formData.reference1.relationship,
-        reference_order: 1,
-      },
-      {
-        loan_request_id: loanRequest.id,
-        name: formData.reference2.name,
-        phone: formData.reference2.phone,
-        relationship: formData.reference2.relationship,
-        reference_order: 2,
-      },
-    ];
+//     // Insert references
+//     const referencesData = [
+//       {
+//         loan_request_id: loanRequest.id,
+//         name: formData.reference1.name,
+//         phone: formData.reference1.phone,
+//         relationship: formData.reference1.relationship,
+//         reference_order: 1,
+//       },
+//       {
+//         loan_request_id: loanRequest.id,
+//         name: formData.reference2.name,
+//         phone: formData.reference2.phone,
+//         relationship: formData.reference2.relationship,
+//         reference_order: 2,
+//       },
+//     ];
 
-    const { error: referencesError } = await supabase
-      .from("references")
-      .insert(referencesData);
+//     const { error: referencesError } = await supabase
+//       .from("references")
+//       .insert(referencesData);
 
-    if (referencesError) {
-      console.error("Error creating references:", referencesError);
-      return { success: false, error: referencesError };
-    }
+//     if (referencesError) {
+//       console.error("Error creating references:", referencesError);
+//       return { success: false, error: referencesError };
+//     }
 
-    return { success: true, data: loanRequest };
-  } catch (error) {
-    console.error("Unexpected error creating loan request:", error);
-    return { success: false, error };
-  }
-};
+//     return { success: true, data: loanRequest };
+//   } catch (error) {
+//     console.error("Unexpected error creating loan request:", error);
+//     return { success: false, error };
+//   }
+// };
 
 /**
  * Get all loan requests for a customer
  */
-export const getCustomerLoanRequests = async (customerId: string) => {
-  try {
-    // Get loan requests
-    const { data: loanRequests, error: loanRequestsError } = await supabase
-      .from("loan_requests")
-      .select("*")
-      .eq("customer_id", customerId)
-      .order("created_at", { ascending: false });
+// export const getCustomerLoanRequests = async (customerId: string) => {
+//   try {
+//     // Get loan requests
+//     const { data: loanRequests, error: loanRequestsError } = await supabase
+//       .from("loan_requests")
+//       .select("*")
+//       .eq("customer_id", customerId)
+//       .order("created_at", { ascending: false });
 
-    if (loanRequestsError) {
-      console.error("Error fetching loan requests:", loanRequestsError);
-      return { success: false, error: loanRequestsError };
-    }
+//     if (loanRequestsError) {
+//       console.error("Error fetching loan requests:", loanRequestsError);
+//       return { success: false, error: loanRequestsError };
+//     }
 
-    // Get references for all loan requests
-    const loanRequestIds = loanRequests.map((lr) => lr.id);
+//     // Get references for all loan requests
+//     const loanRequestIds = loanRequests.map((lr) => lr.id);
 
-    const { data: references, error: referencesError } = await supabase
-      .from("references")
-      .select("*")
-      .in("loan_request_id", loanRequestIds);
+//     const { data: references, error: referencesError } = await supabase
+//       .from("references")
+//       .select("*")
+//       .in("loan_request_id", loanRequestIds);
 
-    if (referencesError) {
-      console.error("Error fetching references:", referencesError);
-      return { success: false, error: referencesError };
-    }
+//     if (referencesError) {
+//       console.error("Error fetching references:", referencesError);
+//       return { success: false, error: referencesError };
+//     }
 
-    const formattedRequests: LoanRequestListItem[] = await Promise.all(
-      loanRequests.map(async (lr: any) => {
-        // Find the first reference to display
-        const firstReference = references.find(
-          (ref) => ref.loan_request_id == lr.id && ref.reference_order == 1
-        );
+//     const formattedRequests: LoanRequestListItem[] = await Promise.all(
+//       loanRequests.map(async (lr: any) => {
+//         // Find the first reference to display
+//         const firstReference = references.find(
+//           (ref) => ref.loan_request_id == lr.id && ref.reference_order == 1
+//         );
 
-        // Map pay frequency to display text
-        const payFrequencyMap = {
-          "1month": "Once a month",
-          "2weeks": "Every 2 weeks",
-          bimonthly: "Twice a month",
-          "1week": "Every week",
-        };
+//         // Map pay frequency to display text
+//         const payFrequencyMap = {
+//           "1month": "Once a month",
+//           "2weeks": "Every 2 weeks",
+//           bimonthly: "Twice a month",
+//           "1week": "Every week",
+//         };
 
-        let loanDetails = await getLoanById(lr?.loan_id);
+//         let loanDetails = await getLoanById(lr?.loan_id);
 
-        return {
-          id: lr.id,
-          requestDate: lr.request_date,
-          loanPackage: {
-            amount: loanDetails?.data?.amount,
-            duration: loanDetails?.data?.duration,
-          },
-          payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
-          reference: firstReference ? firstReference.name : "N/A",
-          status: lr.status,
-          nextPayDate: lr.next_pay_date,
-          admin_request_status: lr.admin_request_status,
-        };
-      })
-    );
+//         return {
+//           id: lr.id,
+//           requestDate: lr.request_date,
+//           loanPackage: {
+//             amount: loanDetails?.data?.amount,
+//             duration: loanDetails?.data?.duration,
+//           },
+//           payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+//           reference: firstReference ? firstReference.name : "N/A",
+//           status: lr.status,
+//           nextPayDate: lr.next_pay_date,
+//           admin_request_status: lr.admin_request_status,
+//         };
+//       })
+//     );
 
-    return { success: true, data: formattedRequests };
-  } catch (error) {
-    console.error("Unexpected error fetching customer loan requests:", error);
-    return { success: false, error };
-  }
-};
+//     return { success: true, data: formattedRequests };
+//   } catch (error) {
+//     console.error("Unexpected error fetching customer loan requests:", error);
+//     return { success: false, error };
+//   }
+// };
 
-export const getAllLoanRequests = async (admin_request_status) => {
-  try {
-    // Get loan requests
-    const { data: loanRequests, error: loanRequestsError } =
-      admin_request_status
-        ? await supabase
-            .from("loan_requests")
-            .select("*")
-            .eq("admin_request_status", admin_request_status)
-            .order("created_at", { ascending: false })
-        : await supabase
-            .from("loan_requests")
-            .select("*")
-            .order("created_at", { ascending: false });
+// export const getAllLoanRequests = async (admin_request_status) => {
+//   try {
+//     // Get loan requests
+//     const { data: loanRequests, error: loanRequestsError } =
+//       admin_request_status
+//         ? await supabase
+//             .from("loan_requests")
+//             .select("*")
+//             .eq("admin_request_status", admin_request_status)
+//             .order("created_at", { ascending: false })
+//         : await supabase
+//             .from("loan_requests")
+//             .select("*")
+//             .order("created_at", { ascending: false });
 
-    if (loanRequestsError) {
-      console.error("Error fetching loan requests:", loanRequestsError);
-      return { success: false, error: loanRequestsError };
-    }
+//     if (loanRequestsError) {
+//       console.error("Error fetching loan requests:", loanRequestsError);
+//       return { success: false, error: loanRequestsError };
+//     }
 
-    // Get references for all loan requests
-    const loanRequestIds = loanRequests.map((lr) => lr.id);
+//     // Get references for all loan requests
+//     const loanRequestIds = loanRequests.map((lr) => lr.id);
 
-    const { data: references, error: referencesError } = await supabase
-      .from("references")
-      .select("*")
-      .in("loan_request_id", loanRequestIds);
+//     const { data: references, error: referencesError } = await supabase
+//       .from("references")
+//       .select("*")
+//       .in("loan_request_id", loanRequestIds);
 
-    if (referencesError) {
-      console.error("Error fetching references:", referencesError);
-      return { success: false, error: referencesError };
-    }
+//     if (referencesError) {
+//       console.error("Error fetching references:", referencesError);
+//       return { success: false, error: referencesError };
+//     }
 
-    const formattedRequests: LoanRequestListItem[] = await Promise.all(
-      loanRequests.map(async (lr) => {
-        // Map pay frequency to display text
-        let loanDetails = await getLoanById(lr?.loan_id);
+//     const formattedRequests: LoanRequestListItem[] = await Promise.all(
+//       loanRequests.map(async (lr) => {
+//         // Map pay frequency to display text
+//         let loanDetails = await getLoanById(lr?.loan_id);
 
-        let customerDetails = await allCustomers(lr?.customer_id);
+//         let customerDetails = await allCustomers(lr?.customer_id);
 
-        const payFrequencyMap = {
-          "1month": "Once a month",
-          "2weeks": "Every 2 weeks",
-          bimonthly: "Twice a month",
-          "1week": "Every week",
-        };
+//         const payFrequencyMap = {
+//           "1month": "Once a month",
+//           "2weeks": "Every 2 weeks",
+//           bimonthly: "Twice a month",
+//           "1week": "Every week",
+//         };
 
-        return {
-          id: lr.id,
-          customerData: customerDetails?.data,
-          loanDetails: lr,
-          loanPackage: {
-            amount: loanDetails?.data?.amount,
-            duration: loanDetails?.data?.duration,
-          },
-          payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+//         return {
+//           id: lr.id,
+//           customerData: customerDetails?.data,
+//           loanDetails: lr,
+//           loanPackage: {
+//             amount: loanDetails?.data?.amount,
+//             duration: loanDetails?.data?.duration,
+//           },
+//           payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
 
-          // requestDate: lr.request_date,
-          // loanPackage: {
-          //   amount: loanDetails?.data?.amount,
-          //   duration: loanDetails?.data?.duration,
-          // },
-          // reference: firstReference ? firstReference.name : "N/A",
-          // status: lr.status,
-          // nextPayDate: lr.next_pay_date,
-        };
-      })
-    );
+//           // requestDate: lr.request_date,
+//           // loanPackage: {
+//           //   amount: loanDetails?.data?.amount,
+//           //   duration: loanDetails?.data?.duration,
+//           // },
+//           // reference: firstReference ? firstReference.name : "N/A",
+//           // status: lr.status,
+//           // nextPayDate: lr.next_pay_date,
+//         };
+//       })
+//     );
 
-    return { success: true, data: formattedRequests };
-  } catch (error) {
-    console.error("Unexpected error fetching customer loan requests:", error);
-    return { success: false, error };
-  }
-};
+//     return { success: true, data: formattedRequests };
+//   } catch (error) {
+//     console.error("Unexpected error fetching customer loan requests:", error);
+//     return { success: false, error };
+//   }
+// };
 
 export const getAllPerceptions = async () => {
   try {

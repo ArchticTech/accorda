@@ -1,16 +1,12 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, MoreVertical, Eye, FileText, Trash } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {MoreVertical, Eye } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import {
-  getCustomerIdFromAuthId,
-  getAllLoanRequests,
-  approveRequest,
   getLoanIds,
   addPerception ,
   getPerceptionDetails 
 } from "../../lib/loans";
-import { LoanRequestListItem  } from "../../lib/types";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";

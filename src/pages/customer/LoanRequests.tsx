@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MoreVertical, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getCustomerIdFromAuthId, getCustomerLoanRequests } from '../../lib/loans';
+import { getCustomerIdFromAuthId } from '../../lib/loans';
 import { LoanRequestListItem } from '../../lib/types';
+import { supabase } from "/src/lib/supabase";
 
 // Status chip component
 const StatusChip = ({ status }) => {
@@ -109,16 +110,16 @@ const LoanRequests = () => {
           setIsLoading(false);
           return;
         }
-        
         // Get loan requests
-        const result = await getCustomerLoanRequests(customerIdResult.data);
-        
-        console.log('result', result);
-        if (result.success) {
-          setLoanRequests(result.data);
-        } else {
-          console.log(result  )
+        const { data, error } = await supabase.functions.invoke('get-customer-loan-requests', {
+          body: JSON.stringify({ customerId: customerIdResult.data }), 
+        });
+        if (error) {
+          console.error('Function error:', error);
           setError('`Failed to fetch loan requests`');
+        }
+        else {
+          setLoanRequests(data.data);
         }
       } catch (err) {
         console.error('Error fetching loan requests:', err);
@@ -170,7 +171,6 @@ const LoanRequests = () => {
   const sortedAndFilteredData = useMemo(() => {
     // Filter data based on search term
     let filteredData = [...loanRequests];
-    console.log(filteredData)
     if (searchTerm) {
 
       const lowerCaseSearchTerm = searchTerm.toLowerCase();
