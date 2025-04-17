@@ -350,3 +350,168 @@ entrypoint = "./functions/get-all-loan-requests/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/get-all-loan-requests/*.html" ]
+
+[functions.get-all-perceptions]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-all-perceptions/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-all-perceptions/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-all-perceptions/*.html" ]
+
+[functions.get-loan-request-details]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-loan-request-details/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-loan-request-details/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-loan-request-details/*.html" ]
+
+[functions.get-customer-id-from-authls]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-customer-id-from-authls/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-customer-id-from-authls/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-customer-id-from-authls/*.html" ]
+
+[functions.get-loan-details]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-loan-details/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-loan-details/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-loan-details/*.html" ]
+
+[functions.update-loan-stage]
+enabled = true
+verify_jwt = true
+import_map = "./functions/update-loan-stage/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/update-loan-stage/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/update-loan-stage/*.html" ]
+
+[functions.update-loan-request-stage]
+enabled = true
+verify_jwt = true
+import_map = "./functions/update-loan-request-stage/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/update-loan-request-stage/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/update-loan-request-stage/*.html" ]
+
+[functions.update-perception-stage]
+enabled = true
+verify_jwt = true
+import_map = "./functions/update-perception-stage/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/update-perception-stage/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/update-perception-stage/*.html" ]
+
+[functions.fetch-perception-stage]
+enabled = true
+verify_jwt = true
+import_map = "./functions/fetch-perception-stage/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/fetch-perception-stage/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/fetch-perception-stage/*.html" ]
+
+[functions.fetch-loan-requests]
+enabled = true
+verify_jwt = true
+import_map = "./functions/fetch-loan-requests/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/fetch-loan-requests/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/fetch-loan-requests/*.html" ]
+
+[functions.fetch-perceptions]
+enabled = true
+verify_jwt = true
+import_map = "./functions/fetch-perceptions/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/fetch-perceptions/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/fetch-perceptions/*.html" ]
+
+[functions.get-loan-ids]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-loan-ids/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-loan-ids/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-loan-ids/*.html" ]
+
+[functions.add-perception]
+enabled = true
+verify_jwt = true
+import_map = "./functions/add-perception/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/add-perception/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/add-perception/*.html" ]
+
+[functions.get-perception-details]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-perception-details/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-perception-details/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-perception-details/*.html" ]
+
+[functions.get-perception]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-perception/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-perception/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-perception/*.html" ]
+
+[functions.accept-request]
+enabled = true
+verify_jwt = true
+import_map = "./functions/accept-request/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/accept-request/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/accept-request/*.html" ]

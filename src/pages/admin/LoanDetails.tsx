@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { LoanDetailsFromId } from "../../lib/loans";
-import { Check, X, Clock, AlertCircle, Info, User, MapPin, Banknote, Calendar, FileText, Shield, Mail, Phone, CreditCard } from "lucide-react";
+import { Check, X, Clock, AlertCircle, User, MapPin, Banknote, CreditCard } from "lucide-react";
 import { ToastContainer , toast , Bounce } from "react-toastify";
 import { updateLoanStage } from "../../lib/loans";
+import { supabase } from "/src/lib/supabase";
 
 
 const ReviewStep = () => {
@@ -15,9 +15,17 @@ const ReviewStep = () => {
     const getLoanRequest = async () => {
       try {
         setIsLoading(true);
-        const data = await LoanDetailsFromId(id);
-        setFormData(data?.data[0]);
-        console.log(data)
+
+        const { data: loanDetailsData, error: loanDetailsError } = await supabase.functions.invoke('get-loan-details', {
+          body: { id },
+        });
+
+        if (loanDetailsError) {
+          console.error('Error fetching loan details:', loanDetailsError);
+          toast.error("Failed to fetch loan details");
+        } else {
+          setFormData(loanDetailsData?.data[0]);
+        }
       } catch (error) {
         console.log(error);
       } finally {
@@ -44,9 +52,18 @@ const ReviewStep = () => {
     
     try {
       await updateLoanStage(id, stepId); // Supabase update call
-      const updatedData = await LoanDetailsFromId(id); // Re-fetch updated data
-      setFormData(updatedData?.data[0]);
-      toast.success("Loan Stage Updated Succesfully !");
+
+      const { data: loanDetailsData, error: loanDetailsError } = await supabase.functions.invoke('get-loan-details', {
+        body: { id },
+      });
+
+      if (loanDetailsError) {
+        console.error('Error fetching updated loan details:', loanDetailsError);
+        toast.error("Failed to fetch updated loan details");
+      } else {
+        setFormData(loanDetailsData?.data[0]);
+        toast.success("Loan Stage Updated Successfully!");
+      }
     } catch (error) {
       console.error("Update failed:", error);
       toast.error("Failed to update status");

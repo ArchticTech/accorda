@@ -2,9 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MoreVertical, Eye, FileText } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import {
-  approveRequest,
-} from "../../lib/loans";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import { supabase } from "../../lib/supabase";
 
@@ -67,15 +64,27 @@ const ActionsDropdown = ({ loanId, onRequestApproved, initialStatus }) => {
 
   const handleRequest = async (status: string) => {
     try {
-      const approveRequestStatus = await approveRequest(loanId, status);
-  
-      if (approveRequestStatus?.success) {
-        const requestStatus = approveRequestStatus?.data[0]?.admin_request_status;
-        
+      const { data, error } = await supabase.functions.invoke('approve-request', {
+        body: {
+          loanId: loanId,
+          status: status,
+        },
+      });
+      
+      if (error) {
+        console.error('Failed to approve request:', error);
+        toast.error("Failed to approve request");
+        setIsOpen(false);
+        return;
+      }
+      
+      if (data?.success) {
+        const requestStatus = data?.data[0]?.admin_request_status;
+      
         setCurrentStatus(requestStatus);
         toast.success("Status Updated Successfully");
         setIsOpen(false);
-          onRequestApproved();
+        onRequestApproved();
       } else {
         toast.error("Failed to approve request");
         setIsOpen(false);

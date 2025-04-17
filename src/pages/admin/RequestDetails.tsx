@@ -18,8 +18,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { ToastContainer, toast, Bounce } from "react-toastify";
-import { updateLoanStage } from "../../lib/loans";
-import { approveRequest } from "../../lib/loans";
+import { supabase } from "/src/lib/supabase";
 
 const ActionButtons = ({ loanId, onRequestApproved, initialStatus }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,12 +30,25 @@ const ActionButtons = ({ loanId, onRequestApproved, initialStatus }) => {
 
   const handleRequest = async (status: string) => {
     try {
-      const approveRequestStatus = await approveRequest(loanId, status);
-
+      const { data, error } = await supabase.functions.invoke('approve-loan-request', {
+        body: {
+          loanId: loanId,
+          status: status,
+        },
+      });
+      
+      if (error) {
+        console.error('Failed to approve request:', error);
+        toast.error("Failed to approve request");
+        setIsOpen(false);
+        return;
+      }
+      
+      const approveRequestStatus = data; // your function should return { success: true/false, data: [...] }
+      
       if (approveRequestStatus?.success) {
-        const requestStatus =
-          approveRequestStatus?.data[0]?.admin_request_status;
-
+        const requestStatus = approveRequestStatus?.data[0]?.admin_request_status;
+      
         setCurrentStatus(requestStatus);
         toast.success("Status Updated Successfully");
         setIsOpen(false);

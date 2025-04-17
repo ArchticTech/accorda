@@ -303,212 +303,212 @@ export const getLoanById = async (loanId: string) => {
 //   }
 // };
 
-export const getAllPerceptions = async () => {
-  try {
-    // Get loan requests
-    const { data: loanRequests, error: loanRequestsError } = await supabase
-      .from("perceptions")
-      .select("*")
-      .order("created_at", { ascending: false });
+// export const getAllPerceptions = async () => {
+//   try {
+//     // Get loan requests
+//     const { data: loanRequests, error: loanRequestsError } = await supabase
+//       .from("perceptions")
+//       .select("*")
+//       .order("created_at", { ascending: false });
 
-    if (loanRequestsError) {
-      console.error("Error fetching loan requests:", loanRequestsError);
-      return { success: false, error: loanRequestsError };
-    }
+//     if (loanRequestsError) {
+//       console.error("Error fetching loan requests:", loanRequestsError);
+//       return { success: false, error: loanRequestsError };
+//     }
 
-    // Get references for all loan requests
-    const loanRequestIds = loanRequests.map((lr) => lr.id);
+//     // Get references for all loan requests
+//     const loanRequestIds = loanRequests.map((lr) => lr.id);
 
-    const { data: references, error: referencesError } = await supabase
-      .from("references")
-      .select("*")
-      .in("loan_request_id", loanRequestIds);
+//     const { data: references, error: referencesError } = await supabase
+//       .from("references")
+//       .select("*")
+//       .in("loan_request_id", loanRequestIds);
 
-    if (referencesError) {
-      console.error("Error fetching references:", referencesError);
-      return { success: false, error: referencesError };
-    }
+//     if (referencesError) {
+//       console.error("Error fetching references:", referencesError);
+//       return { success: false, error: referencesError };
+//     }
 
-    const formattedRequests: LoanRequestListItem[] = await Promise.all(
-      loanRequests.map(async (lr) => {
-        // Map pay frequency to display text
-        let loanDetails = await getLoanById(lr?.loan_id);
+//     const formattedRequests: LoanRequestListItem[] = await Promise.all(
+//       loanRequests.map(async (lr) => {
+//         // Map pay frequency to display text
+//         let loanDetails = await getLoanById(lr?.loan_id);
 
-        let customerDetails = await allCustomers(lr?.customer_id);
+//         let customerDetails = await allCustomers(lr?.customer_id);
 
-        const payFrequencyMap = {
-          "1month": "Once a month",
-          "2weeks": "Every 2 weeks",
-          bimonthly: "Twice a month",
-          "1week": "Every week",
-        };
+//         const payFrequencyMap = {
+//           "1month": "Once a month",
+//           "2weeks": "Every 2 weeks",
+//           bimonthly: "Twice a month",
+//           "1week": "Every week",
+//         };
 
-        return {
-          id: lr.id,
-          customerData: customerDetails?.data,
-          loanDetails: lr,
-          loanPackage: {
-            amount: loanDetails?.data?.amount,
-            duration: loanDetails?.data?.duration,
-          },
-          payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
-        };
-      })
-    );
+//         return {
+//           id: lr.id,
+//           customerData: customerDetails?.data,
+//           loanDetails: lr,
+//           loanPackage: {
+//             amount: loanDetails?.data?.amount,
+//             duration: loanDetails?.data?.duration,
+//           },
+//           payFrequency: payFrequencyMap[lr.pay_frequency] || lr.pay_frequency,
+//         };
+//       })
+//     );
 
-    return { success: true, data: formattedRequests };
-  } catch (error) {
-    console.error("Unexpected error fetching customer loan requests:", error);
-    return { success: false, error };
-  }
-};
+//     return { success: true, data: formattedRequests };
+//   } catch (error) {
+//     console.error("Unexpected error fetching customer loan requests:", error);
+//     return { success: false, error };
+//   }
+// };
 
 /**
  * Get detailed information about a specific loan request
  */
-export const getLoanRequestDetails = async (loanRequestId: string) => {
-  try {
-    // Get loan request with loan details
-    const { data: loanRequest, error: loanRequestError } = await supabase
-      .from("loan_requests")
-      .select(
-        `
-        *,
-        loans:loan_id (*)
-      `
-      )
-      .eq("id", loanRequestId)
-      .single();
+// export const getLoanRequestDetails = async (loanRequestId: string) => {
+//   try {
+//     // Get loan request with loan details
+//     const { data: loanRequest, error: loanRequestError } = await supabase
+//       .from("loan_requests")
+//       .select(
+//         `
+//         *,
+//         loans:loan_id (*)
+//       `
+//       )
+//       .eq("id", loanRequestId)
+//       .single();
 
-    if (loanRequestError) {
-      console.error(
-        `Error fetching loan request with ID ${loanRequestId}:`,
-        loanRequestError
-      );
-      return { success: false, error: loanRequestError };
-    }
+//     if (loanRequestError) {
+//       console.error(
+//         `Error fetching loan request with ID ${loanRequestId}:`,
+//         loanRequestError
+//       );
+//       return { success: false, error: loanRequestError };
+//     }
 
-    // Get references
-    const { data: references, error: referencesError } = await supabase
-      .from("references")
-      .select("*")
-      .eq("loan_request_id", loanRequestId)
-      .order("reference_order", { ascending: true });
+//     // Get references
+//     const { data: references, error: referencesError } = await supabase
+//       .from("references")
+//       .select("*")
+//       .eq("loan_request_id", loanRequestId)
+//       .order("reference_order", { ascending: true });
 
-    if (referencesError) {
-      console.error("Error fetching references:", referencesError);
-      return { success: false, error: referencesError };
-    }
+//     if (referencesError) {
+//       console.error("Error fetching references:", referencesError);
+//       return { success: false, error: referencesError };
+//     }
 
-    // Get status history
-    const { data: statusHistory, error: statusHistoryError } = await supabase
-      .from("loan_status_history")
-      .select("*")
-      .eq("loan_request_id", loanRequestId)
-      .order("created_at", { ascending: true });
+//     // Get status history
+//     const { data: statusHistory, error: statusHistoryError } = await supabase
+//       .from("loan_status_history")
+//       .select("*")
+//       .eq("loan_request_id", loanRequestId)
+//       .order("created_at", { ascending: true });
 
-    if (statusHistoryError) {
-      console.error("Error fetching status history:", statusHistoryError);
-      return { success: false, error: statusHistoryError };
-    }
+//     if (statusHistoryError) {
+//       console.error("Error fetching status history:", statusHistoryError);
+//       return { success: false, error: statusHistoryError };
+//     }
 
-    // Get documents
-    const { data: documents, error: documentsError } = await supabase
-      .from("loan_documents")
-      .select("*")
-      .eq("loan_request_id", loanRequestId)
-      .order("created_at", { ascending: false });
+//     // Get documents
+//     const { data: documents, error: documentsError } = await supabase
+//       .from("loan_documents")
+//       .select("*")
+//       .eq("loan_request_id", loanRequestId)
+//       .order("created_at", { ascending: false });
 
-    if (documentsError) {
-      console.error("Error fetching documents:", documentsError);
-      return { success: false, error: documentsError };
-    }
+//     if (documentsError) {
+//       console.error("Error fetching documents:", documentsError);
+//       return { success: false, error: documentsError };
+//     }
 
-    // Format the response
-    const result: LoanRequestWithDetails = {
-      loanRequest: {
-        ...loanRequest,
-        loan_id: loanRequest.loan_id,
-      },
-      loan: loanRequest.loans,
-      references,
-      statusHistory,
-      documents: documents.length > 0 ? documents : undefined,
-    };
+//     // Format the response
+//     const result: LoanRequestWithDetails = {
+//       loanRequest: {
+//         ...loanRequest,
+//         loan_id: loanRequest.loan_id,
+//       },
+//       loan: loanRequest.loans,
+//       references,
+//       statusHistory,
+//       documents: documents.length > 0 ? documents : undefined,
+//     };
 
-    return { success: true, data: result };
-  } catch (error) {
-    console.error("Unexpected error fetching loan request details:", error);
-    return { success: false, error };
-  }
-};
+//     return { success: true, data: result };
+//   } catch (error) {
+//     console.error("Unexpected error fetching loan request details:", error);
+//     return { success: false, error };
+//   }
+// };
 
 /**
  * Upload a document for a loan request
  */
-export const uploadLoanDocument = async (
-  loanRequestId: string,
-  file: File,
-  documentType: string
-) => {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+// export const uploadLoanDocument = async (
+//   loanRequestId: string,
+//   file: File,
+//   documentType: string
+// ) => {
+//   try {
+//     const {
+//       data: { session },
+//     } = await supabase.auth.getSession();
 
-    if (!session) {
-      return {
-        success: false,
-        error: { message: "User not authenticated" },
-      };
-    }
+//     if (!session) {
+//       return {
+//         success: false,
+//         error: { message: "User not authenticated" },
+//       };
+//     }
 
-    // Generate a unique file path
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}_${Math.random()
-      .toString(36)
-      .substring(2, 15)}.${fileExt}`;
-    const filePath = `loan_documents/${loanRequestId}/${fileName}`;
+//     // Generate a unique file path
+//     const fileExt = file.name.split(".").pop();
+//     const fileName = `${Date.now()}_${Math.random()
+//       .toString(36)
+//       .substring(2, 15)}.${fileExt}`;
+//     const filePath = `loan_documents/${loanRequestId}/${fileName}`;
 
-    // Upload file to storage
-    const { error: uploadError } = await supabase.storage
-      .from("loan_documents")
-      .upload(filePath, file);
+//     // Upload file to storage
+//     const { error: uploadError } = await supabase.storage
+//       .from("loan_documents")
+//       .upload(filePath, file);
 
-    if (uploadError) {
-      console.error("Error uploading document:", uploadError);
-      return { success: false, error: uploadError };
-    }
+//     if (uploadError) {
+//       console.error("Error uploading document:", uploadError);
+//       return { success: false, error: uploadError };
+//     }
 
-    // Get the public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("loan_documents").getPublicUrl(filePath);
+//     // Get the public URL
+//     const {
+//       data: { publicUrl },
+//     } = supabase.storage.from("loan_documents").getPublicUrl(filePath);
 
-    // Insert document record
-    const { data: document, error: documentError } = await supabase
-      .from("loan_documents")
-      .insert({
-        loan_request_id: loanRequestId,
-        document_type: documentType,
-        file_name: file.name,
-        file_path: publicUrl,
-        uploaded_by: session.user.id,
-      })
-      .select()
-      .single();
+//     // Insert document record
+//     const { data: document, error: documentError } = await supabase
+//       .from("loan_documents")
+//       .insert({
+//         loan_request_id: loanRequestId,
+//         document_type: documentType,
+//         file_name: file.name,
+//         file_path: publicUrl,
+//         uploaded_by: session.user.id,
+//       })
+//       .select()
+//       .single();
 
-    if (documentError) {
-      console.error("Error creating document record:", documentError);
-      return { success: false, error: documentError };
-    }
+//     if (documentError) {
+//       console.error("Error creating document record:", documentError);
+//       return { success: false, error: documentError };
+//     }
 
-    return { success: true, data: document };
-  } catch (error) {
-    console.error("Unexpected error uploading document:", error);
-    return { success: false, error };
-  }
-};
+//     return { success: true, data: document };
+//   } catch (error) {
+//     console.error("Unexpected error uploading document:", error);
+//     return { success: false, error };
+//   }
+// };
 
 /**
  * Get customer ID from auth ID
@@ -562,7 +562,7 @@ export const formatLoanRequestForDisplay = (
   const payFrequencyMap = {
     "1month": "Once a month",
     "2weeks": "Every 2 weeks",
-    bimonthly: "Twice a month",
+    "bimonthly": "Twice a month",
     "1week": "Every week",
   };
 
@@ -697,34 +697,34 @@ export const formatLoanRequestForDisplay = (
   };
 };
 
-export const approveRequest = async (loanId: string, requestStatus: string) => {
-  try {
-    // Get loan requests
-    const { data: loanRequestUpdate, error: loanRequestError } = await supabase
-      .from("loan_requests")
-      .update({ admin_request_status: requestStatus })
-      .eq("id", loanId)
-      .select();
+// export const approveRequest = async (loanId: string, requestStatus: string) => {
+//   try {
+//     // Get loan requests
+//     const { data: loanRequestUpdate, error: loanRequestError } = await supabase
+//       .from("loan_requests")
+//       .update({ admin_request_status: requestStatus })
+//       .eq("id", loanId)
+//       .select();
 
-    const { data: statusData, error: statusErrror } = await supabase
-      .from("loan_requests")
-      .update({ status: "reviewing documents" })
-      .eq("id", loanId)
-      .select();
+//     const { data: statusData, error: statusErrror } = await supabase
+//       .from("loan_requests")
+//       .update({ status: "reviewing documents" })
+//       .eq("id", loanId)
+//       .select();
 
-    if (loanRequestError) {
-      console.error("Error fetching loan requests:", loanRequestError);
-      return { success: false, error: loanRequestError };
-    }
+//     if (loanRequestError) {
+//       console.error("Error fetching loan requests:", loanRequestError);
+//       return { success: false, error: loanRequestError };
+//     }
 
-    if (statusErrror) {
-      console.error("Error fetching loan requests:", statusErrror);
-      return { success: false, error: statusErrror };
-    }
+//     if (statusErrror) {
+//       console.error("Error fetching loan requests:", statusErrror);
+//       return { success: false, error: statusErrror };
+//     }
 
-    return { success: true, data: loanRequestUpdate, status: statusData };
-  } catch (err) {}
-};
+//     return { success: true, data: loanRequestUpdate, status: statusData };
+//   } catch (err) {}
+// };
 
 export const LoanDetailsFromId = async (loanId: string) => {
   try {
@@ -763,7 +763,7 @@ export const LoanDetailsFromId = async (loanId: string) => {
         const payFrequencyMap = {
           "1month": "Once a month",
           "2weeks": "Every 2 weeks",
-          bimonthly: "Twice a month",
+          "bimonthly": "Twice a month",
           "1week": "Every week",
         };
 
@@ -859,8 +859,6 @@ export const fetchPerceptionStage = async (perId) => {
 export const fetchLoanRequests = async () => {
   try {
     const { data, error } = await supabase.from("loan_requests").select("*"); // Select all columns, or you can specify the ones you need
-    // .not('admin_request_status', 'eq', 'pending')
-    // .not('admin_request_status', 'eq', 'rejected');
 
     if (error) {
       console.error(`Error fetching status:`, error);

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Clock, DollarSign, Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getCustomerIdFromAuthId, getLoanRequestDetails, formatLoanRequestForDisplay } from '../../lib/loans';
+import { formatLoanRequestForDisplay } from '../../lib/loans';
+import { supabase } from "/src/lib/supabase";
 
 // Status badge component
 const StatusBadge = ({ status }) => {
@@ -47,25 +48,29 @@ const LoanRequestDetails = () => {
       try {
         setLoading(true);
         
-        // Get customer ID from auth ID
-        const customerIdResult = await getCustomerIdFromAuthId(user.id);
-        
-        if (!customerIdResult.success) {
-          setError('Failed to fetch customer information');
+        // Fetching loan request
+        const { data: loanData, error: loanError } = await supabase.functions.invoke('get-loan-request', {
+          body: { id }, // loan request id
+        });
+
+        if (loanError) {
+          console.error('Failed to fetch loan request details:', loanError);
+          setError('Failed to fetch loan request details');
           setLoading(false);
           return;
         }
-        
-        // Get loan request details
-        const result = await getLoanRequestDetails(id);
-        
-        if (result.success) {
-          // Format the data for display
-          const formattedData = formatLoanRequestForDisplay(result.data);
+
+        const loanResult = loanData;
+
+        if (loanResult.success) {
+          const formattedData = formatLoanRequestForDisplay(loanResult.data);
           setLoanRequest(formattedData);
         } else {
           setError('Failed to fetch loan request details');
         }
+
+        setLoading(false);
+
       } catch (err) {
         console.error('Error fetching loan request details:', err);
         setError('An unexpected error occurred');
