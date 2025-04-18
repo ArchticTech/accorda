@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { supabase } from "../../lib/supabase";
 import { Customer } from "../../lib/types";
-import { TrendingUp, Users, Clock, CreditCard } from "lucide-react";
 import RecentRequests from "../../components/Admin/recentRequests";
-import { fetchLoanRequests, fetchPerceptionRequests } from "../../lib/loans";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "/src/lib/supabase";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -42,59 +40,6 @@ const AdminDashboard = () => {
     }
   }, [user]);
 
-  // function countLoanRequestsByStatus(loanRequests) {
-  //   const statusCounts = {
-  //     "reviewing documents": 0,
-  //     validation: 0,
-  //     evaluation: 0,
-  //     signature: 0,
-  //     deposit: 0,
-  //     complete: 0,
-  //     rejected: 0,
-  //   };
-
-  //   if (!loanRequests || !Array.isArray(loanRequests)) {
-  //     return statusCounts;
-  //   }
-
-  //   loanRequests.forEach((request) => {
-  //     if (statusCounts.hasOwnProperty(request.status)) {
-  //       statusCounts[request.status]++;
-  //     }
-  //   });
-
-  //   return statusCounts;
-  // }
-
-  // function capitalizeFirstLetter(string) {
-  //   if (!string) return "";
-  //   return string.charAt(0).toUpperCase() + string.slice(1);
-  // }
-
-  // function createStatusArray(statusCounts) {
-  //   return Object.keys(statusCounts).map((status) => ({
-  //     status: capitalizeFirstLetter(status), // Capitalize the status
-  //     count: statusCounts[status],
-  //   }));
-  // }
-
-  // async function renderLoanStatusCards() {
-  //   const response = await fetchLoanRequests();
-
-  //   if (!response.success) {
-  //     console.error("Failed to fetch loan requests:", response.error);
-  //     return;
-  //   }
-
-  //   console.log(response.data);
-  //   const statusCounts = countLoanRequestsByStatus(response.data);
-  //   const statusArray = createStatusArray(statusCounts);
-  //   setStatsData(statusArray);
-
-  //   console.log(statusArray);
-  // }
-
-
   const [statsData, setStatsData] = useState([]);
   const navigate = useNavigate();
 
@@ -118,16 +63,15 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetchLoanRequests();
-      
-      if (!response.success) {
-        console.error("Failed to fetch loan requests:", response.error);
+      const { data: responseData, error } = await supabase.functions.invoke('fetch-loan-requests');
+    
+      if (error) {
+        console.error("Failed to fetch loan requests:", error);
         return;
       }
-      
-      const data = response.data;
-      console.log(data)
-      
+    
+      const data = responseData?.data;
+    
       // Process data to count by status and time periods
       const processedData = processRequestsByStatus(data);
       setStatsData(processedData);
@@ -235,18 +179,20 @@ const AdminDashboard = () => {
   }
 
   async function renderPerceptionStatusCards() {
-    const response = await fetchPerceptionRequests();
-
-    if (!response.success) {
-      console.error("Failed to fetch perception requests:", response.error);
-      return;
+    try {
+      const { data: responseData, error } = await supabase.functions.invoke('fetch-perceptions');
+    
+      if (error) {
+        console.error("Failed to fetch perception requests:", error);
+        return;
+      }
+    
+      const stageCounts = countPerceptionRequestsByStage(responseData?.data);
+      const stageArray = createPerceptionStatusArray(stageCounts);
+      setPerceptionStatsData(stageArray);
+    } catch (error) {
+      console.error("Unexpected error while fetching perception requests:", error);
     }
-
-    console.log(response.data);
-    const stageCounts = countPerceptionRequestsByStage(response.data);
-    const stageArray = createPerceptionStatusArray(stageCounts);
-    setPerceptionStatsData(stageArray);
-    console.log(stageArray);
   }
 
   useEffect(() => {
@@ -320,28 +266,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Links */}
-      {/* <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Quick Links</h3>
-        </div>
-        <div className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <a href="/customer/new-loan" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-              <h4 className="text-md font-medium text-gray-900">Apply for Loan</h4>
-              <p className="mt-1 text-sm text-gray-500">Start a new loan application</p>
-            </a>
-            <a href="/customer/loan-requests" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-              <h4 className="text-md font-medium text-gray-900">View Requests</h4>
-              <p className="mt-1 text-sm text-gray-500">Check your loan request status</p>
-            </a>
-            <a href="/customer/profile" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-              <h4 className="text-md font-medium text-gray-900">Update Profile</h4>
-              <p className="mt-1 text-sm text-gray-500">Manage your account details</p>
-            </a>
-          </div>
-        </div>
-      </div> */}
     </div>
   );
 };

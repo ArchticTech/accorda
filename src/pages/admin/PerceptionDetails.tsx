@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getSinglePerception, updatePerceptionStage , fetchPerceptionStage } from "../../lib/loans";
 import {
   Check,
   X,
@@ -27,7 +26,7 @@ const ActionButtons = ({ loanId, onRequestApproved, initialStatus }) => {
       const { data, error } = await supabase.functions.invoke('approve-loan-request', {
         body: {
           loanId: loanId,
-          status: status,
+          requestStatus: status,
         },
       });
       
@@ -108,11 +107,18 @@ const AdminPerceptionView = () => {
       if (loader) {
         setIsLoading(true);
       }
-      const data = await getSinglePerception(id);
-      setFormData(data?.data[0]);
-      console.log(data);
+    
+      const { data: result, error } = await supabase.functions.invoke('get-perception-details', {
+        body: { id },
+      });
+    
+      if (error || !result?.success) {
+        console.error('Failed to fetch perception:', error || result?.error);
+      } else {
+        setFormData(result?.data[0]);
+      }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       if (loader) {
         setIsLoading(false);
@@ -122,11 +128,18 @@ const AdminPerceptionView = () => {
 
   const getStage = async function(){
     try {
-      const data = await fetchPerceptionStage(id)
-      console.log(data)
-      setCurrentStage(data?.data[0]?.stage)
+      const { data, error } = await supabase.functions.invoke('fetch-perception-stage', {
+        body: { id },
+      });
+    
+      if (error) {
+        console.error('Error fetching perception stage:', error);
+        return;
+      }
+    
+      setCurrentStage(data?.data[0]?.stage);
     } catch (error) {
-        console.log(error)
+      console.error(error);
     }
   }
 
@@ -150,9 +163,18 @@ const AdminPerceptionView = () => {
     if (!formData) return;
 
     try {
-      await updatePerceptionStage(id, stepId); // Supabase update call
-      await getStage()
-      toast.success("Stage Updated Succesfully");
+      const { data: updateData, error: updateError } = await supabase.functions.invoke('update-perception-stage', {
+        body: { id, stepId },
+      });
+    
+      if (updateError) {
+        console.error('Error updating perception stage:', updateError);
+        toast.error("Failed to update perception stage");
+        return;
+      }
+    
+      await getStage();
+      toast.success("Stage Updated Successfully");
     } catch (error) {
       console.error("Update failed:", error);
       toast.error("Failed to update status");

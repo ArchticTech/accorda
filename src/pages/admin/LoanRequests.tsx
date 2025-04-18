@@ -94,20 +94,10 @@ const AdminLoanRequests = () => {
 
   useEffect(() => {
     const fetchLoanRequests = async () => {
-      // if (!user) return;
       
       try {
         setIsLoading(true);
         
-        // Get loan requests
-        // const result = await getAllLoanRequests('accept');
-        
-        // if (result.success) {
-        //   setLoanRequests(result?.data);
-        // } else {
-        //   console.log(result  )
-        //   setError('`Failed to fetch loan requests`');
-        // }
         const { data, error } = await supabase.functions.invoke('get-all-loan-requests', {
           body: JSON.stringify({ admin_request_status: 'accept' }),
         });

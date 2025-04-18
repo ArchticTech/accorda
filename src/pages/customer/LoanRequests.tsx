@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MoreVertical, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getCustomerIdFromAuthId } from '../../lib/loans';
 import { LoanRequestListItem } from '../../lib/types';
 import { supabase } from "/src/lib/supabase";
 
@@ -101,25 +100,27 @@ const LoanRequests = () => {
       
       try {
         setIsLoading(true);
-        
-        // Get customer ID from auth ID
-        const customerIdResult = await getCustomerIdFromAuthId(user.id);
-        
-        if (!customerIdResult.success) {
+      
+        // Get customer ID from auth ID using Supabase function
+        const { data: customerResult, error: customerError } = await supabase.functions.invoke('get-customer-id-from-auth', {
+          body: { authId: user.id },
+        });
+      
+        if (customerError || !customerResult?.success) {
           setError('Failed to fetch customer information');
-          setIsLoading(false);
           return;
         }
+      
         // Get loan requests
-        const { data, error } = await supabase.functions.invoke('get-customer-loan-requests', {
-          body: JSON.stringify({ customerId: customerIdResult.data }), 
+        const { data: loanData, error: loanError } = await supabase.functions.invoke('get-customer-loan-requests', {
+          body: { customerId: customerResult.data },
         });
-        if (error) {
-          console.error('Function error:', error);
-          setError('`Failed to fetch loan requests`');
-        }
-        else {
-          setLoanRequests(data.data);
+      
+        if (loanError) {
+          console.error('Function error:', loanError);
+          setError('Failed to fetch loan requests');
+        } else {
+          setLoanRequests(loanData.data);
         }
       } catch (err) {
         console.error('Error fetching loan requests:', err);

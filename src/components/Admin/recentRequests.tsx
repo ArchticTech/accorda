@@ -45,29 +45,9 @@ const RecentRequests = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchLoanRequests = async () => {
-      // if (!user) return;
-      
+    const fetchLoanRequests = async () => {      
       try {
         setIsLoading(true);
-        
-        // Get loan requests
-        // const result = await getAllLoanRequests('');
-        
-        // if (result.success) {
-        //   setLoanRequests(result?.data);
-
-        //   const sortedData = result.data.sort((a, b) => {
-        //     return new Date(b.loanDetails.request_date) - new Date(a.loanDetails.request_date);
-        //   });
-  
-        //   const recentData = sortedData.slice(0, 3);
-  
-        //   setLoanRequests(recentData);
-        // } else {
-        //   console.log(result  )
-        //   setError('`Failed to fetch loan requests`');
-        // }
         
         const { data, error } = await supabase.functions.invoke('get-all-loan-requests', {
           body: JSON.stringify({ admin_request_status: '' }),

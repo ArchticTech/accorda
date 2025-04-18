@@ -10,7 +10,6 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import IncomeSourceStep from './steps/IncomeSourceStep';
 import LoanDetailsStep from './steps/LoanDetailsStep';
 import ReviewStep from './steps/ReviewStep';
-import { getCustomerIdFromAuthId } from '../../../lib/loans';
 import { Loan } from '../../../lib/types';
 import { supabase } from "/src/lib/supabase";
 
@@ -198,27 +197,29 @@ const LoanApplicationStepper = () => {
     try {
       setIsSubmitting(true);
       setError(null);
-      
-      // Get customer ID from auth ID
-      const customerIdResult = await getCustomerIdFromAuthId(user.id);
-      
-      if (!customerIdResult.success) {
+
+      // Get customer ID from auth ID using Supabase function
+      const { data: customerResult, error: customerError } = await supabase.functions.invoke('get-customer-id-from-auth', {
+        body: { authId: user.id },
+      });
+
+      if (customerError || !customerResult?.success) {
         setError('Failed to fetch customer information');
         setIsSubmitting(false);
         return;
       }
-      
+
       // Create loan request
-      const { data, error } = await supabase.functions.invoke('create-loan-request', {
-        body: JSON.stringify({
-          customerId: customerIdResult.data,
+      const { data: createData, error: createError } = await supabase.functions.invoke('create-loan-request', {
+        body: {
+          customerId: customerResult.data,
           formData: formData,
-        }),
+        },
       });
-      
-      if (error) {
+
+      if (createError) {
         setError('Failed to submit loan application');
-        console.error('Function error:', error);
+        console.error('Function error:', createError);
       } else {
         navigate('/customer/loan-requests', { 
           state: { 

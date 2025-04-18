@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Check, X, Clock, AlertCircle, User, MapPin, Banknote, CreditCard } from "lucide-react";
 import { ToastContainer , toast , Bounce } from "react-toastify";
-import { updateLoanStage } from "../../lib/loans";
 import { supabase } from "/src/lib/supabase";
 
 
@@ -17,7 +16,7 @@ const ReviewStep = () => {
         setIsLoading(true);
 
         const { data: loanDetailsData, error: loanDetailsError } = await supabase.functions.invoke('get-loan-details', {
-          body: { id },
+          body: { loanId: id },
         });
 
         if (loanDetailsError) {
@@ -51,12 +50,20 @@ const ReviewStep = () => {
     if (!formData) return;
     
     try {
-      await updateLoanStage(id, stepId); // Supabase update call
-
-      const { data: loanDetailsData, error: loanDetailsError } = await supabase.functions.invoke('get-loan-details', {
-        body: { id },
+      const { data: updateData, error: updateError } = await supabase.functions.invoke('update-loan-stage', {
+        body: { requestId: id, status: stepId },
       });
-
+    
+      if (updateError) {
+        console.error('Error updating loan stage:', updateError);
+        toast.error("Failed to update loan stage");
+        return;
+      }
+    
+      const { data: loanDetailsData, error: loanDetailsError } = await supabase.functions.invoke('get-loan-details', {
+        body: { loanId: id },
+      });
+    
       if (loanDetailsError) {
         console.error('Error fetching updated loan details:', loanDetailsError);
         toast.error("Failed to fetch updated loan details");
@@ -332,13 +339,13 @@ const getStatusBadge = (status) => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <dt className="text-sm font-medium text-gray-500">Reference 01</dt>
             <dd className="mt-1 text-md font-semibold text-gray-900">
-              {formData.reference[0].name} <small>( {formData?.reference[0].relationship} )</small>
+              {formData.reference[0]?.name} <small>( {formData?.reference[0]?.relationship} )</small>
             </dd>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <dt className="text-sm font-medium text-gray-500">Phone</dt>
             <dd className="mt-1 text-md font-semibold text-gray-900">
-            {formData.reference[0].phone}
+            {formData.reference[0]?.phone}
 
             </dd>
           </div>
@@ -346,13 +353,13 @@ const getStatusBadge = (status) => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <dt className="text-sm font-medium text-gray-500">Reference 02</dt>
             <dd className="mt-1 text-md font-semibold text-gray-900">
-              {formData.reference[1].name} <small>( {formData?.reference[1].relationship} )</small>
+              {formData.reference[1]?.name} <small>( {formData?.reference[1]?.relationship} )</small>
             </dd>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <dt className="text-sm font-medium text-gray-500">Phone</dt>
             <dd className="mt-1 text-md font-semibold text-gray-900">
-            {formData.reference[1].phone}
+            {formData.reference[1]?.phone}
 
             </dd>
           </div>

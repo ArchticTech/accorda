@@ -1,20 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { LoanDetailsFromId, updateRequestStage } from "../../lib/loans";
 import {
   Check,
   X,
   Clock,
   AlertCircle,
-  Info,
   User,
   MapPin,
   Banknote,
-  Calendar,
-  FileText,
-  Shield,
-  Mail,
-  Phone,
   CreditCard,
 } from "lucide-react";
 import { ToastContainer, toast, Bounce } from "react-toastify";
@@ -33,7 +26,7 @@ const ActionButtons = ({ loanId, onRequestApproved, initialStatus }) => {
       const { data, error } = await supabase.functions.invoke('approve-loan-request', {
         body: {
           loanId: loanId,
-          status: status,
+          requestStatus: status,
         },
       });
       
@@ -113,11 +106,19 @@ const AdminRequestView = () => {
       if (loader) {
         setIsLoading(true);
       }
-      const data = await LoanDetailsFromId(id);
-      setFormData(data?.data[0]);
-      console.log(data);
+    
+      const { data, error } = await supabase.functions.invoke('get-loan-details', {
+        body: { loanId: id },
+      });
+      console.log(data)
+    
+      if (error) {
+        console.error('Error fetching loan details:', error);
+      } else {
+        setFormData(data?.data[0]);
+      }
     } catch (error) {
-      console.log(error);
+      console.error('Unexpected error:', error);
     } finally {
       if (loader) {
         setIsLoading(false);
@@ -145,14 +146,32 @@ const AdminRequestView = () => {
     if (!formData) return;
 
     try {
-      await updateRequestStage(id, stepId); // Supabase update call
-      const updatedData = await LoanDetailsFromId(id); // Re-fetch updated data
-      setFormData(updatedData?.data[0]);
-      toast.success("Stage Updated Succesfully");
+      const { data: updateData, error: updateError } = await supabase.functions.invoke('update-loan-request-stage', {
+        body: { requestId: id, stage: stepId },
+      });
+    
+      if (updateError) {
+        console.error('Error updating request stage:', updateError);
+        toast.error("Failed to update request stage");
+        return;
+      }
+    
+      const { data: updatedData, error } = await supabase.functions.invoke('get-loan-details', {
+        body: { loanId: id },
+      });
+    
+      if (error) {
+        console.error('Error fetching updated loan details:', error);
+        toast.error("Failed to fetch updated loan details");
+      } else {
+        setFormData(updatedData?.data[0]);
+        toast.success("Stage Updated Successfully");
+      }
     } catch (error) {
       console.error("Update failed:", error);
       toast.error("Failed to update status");
     }
+    
   };
 
   // Stepper UI rendering logic
@@ -504,14 +523,14 @@ const AdminRequestView = () => {
                 Reference 01
               </dt>
               <dd className="mt-1 text-md font-semibold text-gray-900">
-                {formData.reference[0].name}{" "}
-                <small>( {formData?.reference[0].relationship} )</small>
+                {formData.reference[0]?.name}{" "}
+                <small>( {formData?.reference[0]?.relationship} )</small>
               </dd>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <dt className="text-sm font-medium text-gray-500">Phone</dt>
               <dd className="mt-1 text-md font-semibold text-gray-900">
-                {formData.reference[0].phone}
+                {formData.reference[0]?.phone}
               </dd>
             </div>
 
@@ -520,14 +539,14 @@ const AdminRequestView = () => {
                 Reference 02
               </dt>
               <dd className="mt-1 text-md font-semibold text-gray-900">
-                {formData.reference[1].name}{" "}
-                <small>( {formData?.reference[1].relationship} )</small>
+                {formData.reference[1]?.name}{" "}
+                <small>( {formData?.reference[1]?.relationship} )</small>
               </dd>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <dt className="text-sm font-medium text-gray-500">Phone</dt>
               <dd className="mt-1 text-md font-semibold text-gray-900">
-                {formData.reference[1].phone}
+                {formData.reference[1]?.phone}
               </dd>
             </div>
           </div>

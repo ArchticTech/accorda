@@ -1,8 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { MoreVertical, Trash } from "lucide-react";
-import {
-  addPerception
-} from "../../lib/loans";
 import { signUp } from "../../lib/auth";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import { Button, Dialog, Transition } from "@headlessui/react";

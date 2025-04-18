@@ -17,15 +17,24 @@ serve(async (req) => {
   );
 
   try {
-    // 1️⃣ Fetch all perceptions
+    const { perceptionId } = await req.json();
+    if (!perceptionId) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing perceptionId" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // 1️⃣ Fetch single perception
     const { data: perceptions, error: perceptionError } = await supabase
       .from("perceptions")
-      .select("*");
+      .select("*")
+      .eq("id", perceptionId);
 
     if (perceptionError || !perceptions || perceptions.length === 0) {
-      console.error("Error fetching perceptions:", perceptionError);
+      console.error("Error fetching perception:", perceptionError);
       return new Response(
-        JSON.stringify({ success: false, error: "No perceptions found" }),
+        JSON.stringify({ success: false, error: "No perception found" }),
         { status: 404, headers: corsHeaders }
       );
     }
@@ -72,12 +81,24 @@ serve(async (req) => {
           return null;
         }
 
-        // 5️⃣ Return structured object
+        // 5️⃣ Fetch references
+        const { data: references, error: referencesError } = await supabase
+          .from("references")
+          .select("*")
+          .eq("loan_request_id", loanId);
+
+        if (referencesError) {
+          console.error("Error fetching references:", referencesError);
+          return null;
+        }
+
+        // 6️⃣ Return structured object
         return {
           perceptionData: perception,
           loanData: loanData[0],
           loanPackage,
           customerData: customerDetails,
+          references,
         };
       })
     );

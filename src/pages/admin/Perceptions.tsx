@@ -2,14 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {MoreVertical, Eye } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import {
-  getLoanIds,
-  addPerception ,
-  getPerceptionDetails 
-} from "../../lib/loans";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
+import { supabase } from "/src/lib/supabase";
 
 // Status chip component
 const StatusChip = ({ status }) => {
@@ -138,8 +134,17 @@ const AdminPerceptions = () => {
 
 
   async function getLoanList(){
-    const getIds = await getLoanIds()
-      setLoanList(getIds?.data)
+    try {
+      const { data: responseData, error } = await supabase.functions.invoke('get-loan-ids');
+    
+      if (error) {
+        console.error("Failed to fetch loan IDs:", error);
+      } else {
+        setLoanList(responseData?.data);
+      }
+    } catch (error) {
+      console.error("Unexpected error while fetching loan IDs:", error);
+    }
   } 
 
   useEffect(() => {
@@ -147,34 +152,21 @@ const AdminPerceptions = () => {
   }, []);
 
   const fetchLoanRequests = async (loader) => {
-    // if (!user) return;
-
     try {
       if (loader) {
         setIsLoading(true);
       }
-
-      // Get customer ID from auth ID
-      // const customerIdResult = await getCustomerIdFromAuthId(user.id);
-
-      // if (!customerIdResult.success) {
-      //   setError('Failed to fetch customer information');
-      //   setIsLoading(false);
-      //   return;
-      // }
-
-      // Get loan requests
-      const result = await getPerceptionDetails();
-      if (result.success) {
-        console.log(result)
-        setLoanRequests(result?.data);
-        console.log(result?.data)
+    
+      const { data: result, error } = await supabase.functions.invoke('get-perceptions');
+    
+      if (error || !result?.success) {
+        console.error('Failed to fetch perception details:', error || result?.error);
+        setError("Failed to fetch Perceptions");
       } else {
-        console.log(result);
-        setError("`Failed to fetch loan requests`");
+        setLoanRequests(result?.data);
       }
     } catch (err) {
-      console.error("Error fetching loan requests:", err);
+      console.error("Error fetching Perceptions:", err);
       setError("An unexpected error occurred");
     } finally {
       if (loader) {
@@ -342,20 +334,23 @@ const AdminPerceptions = () => {
   
     try {
       setPerceptionLoading(true);
-  
-      const result = await addPerception(selectedLoan, selectedStage);
-  
-      if (!result?.success) {
+    
+      const { data: result, error } = await supabase.functions.invoke('add-perception', {
+        body: { selectedLoan, selectedStage },
+      });
+    
+      if (error || !result?.success) {
+        console.error("Failed to add perception:", error || result?.message);
         toast.error(result?.message || 'Failed to add perception');
         return;
       }
-  
+    
       await fetchLoanRequests(false);
       toast.success('Perception added successfully');
-      
+    
       setSelectedLoan(null);
       setSelectedStage('');
-  
+    
       setTimeout(() => {
         setOpen(!open);
       }, 1500);

@@ -64,10 +64,10 @@ const ActionsDropdown = ({ loanId, onRequestApproved, initialStatus }) => {
 
   const handleRequest = async (status: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('approve-request', {
+      const { data, error } = await supabase.functions.invoke('approve-loan-request', {
         body: {
           loanId: loanId,
-          status: status,
+          requestStatus: status,
         },
       });
       
@@ -177,15 +177,6 @@ const AdminRequests = () => {
      if(loader) {
       setIsLoading(true);
      }
-
-      // Get loan requests
-      // const result = await getAllLoanRequests();
-      // if (result.success) {
-      //   setLoanRequests(result?.data);
-      // } else {
-      //   console.log(result);
-      //   setError("`Failed to fetch loan requests`");
-      // }
       const { data, error } = await supabase.functions.invoke('get-all-loan-requests', {
         body: JSON.stringify({}), // No admin_request_status passed
       });
